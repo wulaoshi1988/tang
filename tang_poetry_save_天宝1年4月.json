@@ -1,0 +1,391 @@
+{
+  "settings": {
+    "apiBaseUrl": "https://api.code-relay.com/v1",
+    "apiKey": "sk-9mETcZgCAi1oaR1SI9IarN5H862gOW7Bg46MwB0F5adtQtaV",
+    "model": "claude-3-5-haiku-20241022",
+    "availableModels": [
+      "claude-3-5-haiku-20241022",
+      "claude-3-5-sonnet-20241022",
+      "claude-3-7-sonnet-20250219",
+      "claude-haiku-4-5-20251001",
+      "claude-opus-4-1-20250805",
+      "claude-opus-4-20250514",
+      "claude-opus-4-5-20251101",
+      "claude-sonnet-4-20250514",
+      "claude-sonnet-4-5-20250929",
+      "gemini-3-pro-preview",
+      "gpt-5",
+      "gpt-5-codex",
+      "gpt-5-codex-high",
+      "gpt-5-codex-low-low",
+      "gpt-5-codex-medium-medium",
+      "gpt-5.1-codex"
+    ],
+    "lastModelFetch": "2026-01-22T03:15:48.126Z",
+    "connectionStatus": "unknown"
+  },
+  "world": {
+    "dynasty": "大唐",
+    "emperorName": "李隆基",
+    "yearTitle": "天宝",
+    "year": 1,
+    "month": 4,
+    "weather": "阴",
+    "season": "春",
+    "townName": "长安",
+    "countyName": "京兆",
+    "townDescription": "万国来朝之地，诗乐风流之乡。",
+    "specialProduct": "荔枝",
+    "currentLocation": "长安城",
+    "isPoetryPartyMonth": true,
+    "isExamMonth": false
+  },
+  "protagonist": {
+    "id": "protagonist",
+    "name": "555",
+    "gender": "女",
+    "age": 18,
+    "identity": "游学才女",
+    "courtesyName": "",
+    "avatar": "",
+    "stats": {
+      "literaryTalent": 39,
+      "charm": 40,
+      "health": 100,
+      "reputation": -10
+    },
+    "status": "健康",
+    "mood": "平静",
+    "money": 1000,
+    "house": "草堂",
+    "backpack": [],
+    "relations": {},
+    "career": "无",
+    "careerLevel": 0,
+    "examHistory": [],
+    "poetryCount": 3
+  },
+  "brother": null,
+  "characters": [
+    {
+      "id": "poet_1769051203283_l55wx",
+      "name": "崔琳",
+      "courtesyName": "子玉",
+      "gender": "男",
+      "age": 28,
+      "identity": "翰林学士",
+      "socialClass": "名门",
+      "poetryStyle": "雍容华贵,辞藻艳丽,多描写宫廷气象与圣恩浩荡,格律严谨。",
+      "specialty": "七言律诗",
+      "signatureWork": "紫殿香飘玉漏迟,君王长在凤凰池。宫花寂寞红千树,唯有垂杨管别离。云散九重金阙迥,月明千里玉箫悲。承恩不在貌如玉,只在君心知不知。",
+      "signatureWorkTitle": "宫词",
+      "reputation": 85,
+      "charm": 78,
+      "literaryTalent": 88,
+      "socialInfluence": 45,
+      "intro": "出身博陵崔氏,典型的世家子弟。年纪轻轻便入翰林院待诏,常随侍御前。性格沉稳内敛,深谙官场之道,诗风多歌功颂德或感叹宫怨,是长安上层社交圈的宠儿。",
+      "relations": {},
+      "isPoet": true
+    },
+    {
+      "id": "poet_1769051203283_wafxo",
+      "name": "柳沧",
+      "courtesyName": "烈之",
+      "gender": "男",
+      "age": 35,
+      "identity": "边塞将军",
+      "socialClass": "寒门",
+      "poetryStyle": "悲壮苍凉,豪放不羁,字里行间透着大漠的风沙与金戈铁马的杀伐之气。",
+      "specialty": "七言绝句",
+      "signatureWork": "北风吹雪暗天山,大漠孤烟落日寒。铁马夜嘶霜月白,何时夺取玉门关。",
+      "signatureWorkTitle": "塞下曲",
+      "reputation": 60,
+      "charm": 65,
+      "literaryTalent": 70,
+      "socialInfluence": 30,
+      "intro": "早年投笔从戎,镇守安西四镇。常年与胡人打交道,性格豪爽嗜酒,不拘小节。他的诗不讲究精细雕琢,却以真挚的英雄气概动人,常在酒肆中被胡姬传唱。",
+      "relations": {},
+      "isPoet": true
+    },
+    {
+      "id": "poet_1769051203283_4qe89",
+      "name": "孟云",
+      "courtesyName": "松云",
+      "gender": "男",
+      "age": 55,
+      "identity": "终南山隐士",
+      "socialClass": "隐逸",
+      "poetryStyle": "清幽淡远,禅意深长,多写山水田园之乐,追求物我两忘的境界。",
+      "specialty": "五言律诗",
+      "signatureWork": "独坐松门久,山空月正圆。云深归路断,林静鸟巢悬。煮茗听泉响,焚香对石眠。不闻尘世事,心在白云边。",
+      "signatureWorkTitle": "山居即事",
+      "reputation": 90,
+      "charm": 50,
+      "literaryTalent": 85,
+      "socialInfluence": 20,
+      "intro": "曾是科举落第秀才,后看破红尘,隐居终南山四十余年。虽不在朝堂,但其名声远扬,常有达官贵人入山求见。性格孤傲,喜好清静,对功名利禄嗤之以鼻。",
+      "relations": {},
+      "isPoet": true
+    },
+    {
+      "id": "poet_1769051203283_l019l",
+      "name": "薛瑶兰",
+      "courtesyName": "婉卿",
+      "gender": "女",
+      "age": 22,
+      "identity": "曲江歌姬",
+      "socialClass": "市井",
+      "poetryStyle": "婉约含蓄,细腻多情,擅长以景托情,道尽风尘女子的无奈与对真情的渴望。",
+      "specialty": "七言绝句",
+      "signatureWork": "曲江细柳拂清波,马上王孙奈若何。花落更怜春色暮,红楼独唱从军歌。",
+      "signatureWorkTitle": "曲江春望",
+      "reputation": 75,
+      "charm": 80,
+      "literaryTalent": 78,
+      "socialInfluence": 40,
+      "intro": "虽沦落风尘,但才情出众,琴棋书画样样精通。她是曲江池畔最红的歌姬,无数文人墨客为求其一诗而挥金如土。外表柔媚,内心却十分刚强,渴望赎身从良。",
+      "relations": {},
+      "isPoet": true
+    },
+    {
+      "id": "poet_1769051203283_kl16e",
+      "name": "张旭",
+      "courtesyName": "文致",
+      "gender": "男",
+      "age": 24,
+      "identity": "新科举人",
+      "socialClass": "寒门",
+      "poetryStyle": "意气风发,清新自然,充满对未来的憧憬与报效国家的壮志,偶有怀才不遇的牢骚。",
+      "specialty": "五言古诗",
+      "signatureWork": "男儿立天地,壮志当拿云。十年磨一剑,霜刃未曾试。今朝离草莽,天阙以此至。愿斩楼兰首,功名勒金石。",
+      "signatureWorkTitle": "书怀",
+      "reputation": 40,
+      "charm": 60,
+      "literaryTalent": 82,
+      "socialInfluence": 15,
+      "intro": "来自南方的寒门学子,凭才华刚刚在科举中崭露头角。囊中羞涩却志存高远,常游荡于西市书肆。性格耿直,容易得罪人,目前正急于寻找权贵投行卷以求官职。",
+      "relations": {},
+      "isPoet": true
+    },
+    {
+      "id": "poet_1769051203283_hftv0",
+      "name": "李婉",
+      "courtesyName": "明珠",
+      "gender": "女",
+      "age": 19,
+      "identity": "名门闺秀",
+      "socialClass": "权贵",
+      "poetryStyle": "清新雅致,观察入微,多写闺阁生活与四时景物,格调高雅而不失灵动。",
+      "specialty": "五言绝句",
+      "signatureWork": "闲倚绣帘开,双燕雨中来。落花人不扫,满地是苍苔。",
+      "signatureWorkTitle": "春怨",
+      "reputation": 50,
+      "charm": 75,
+      "literaryTalent": 80,
+      "socialInfluence": 35,
+      "intro": "皇室宗亲旁支之女,自幼饱读诗书,深受宠爱。养在深闺人未识,但其诗作常通过家中父兄流传于士林。性格天真烂漫,对墙外的长安城充满了好奇与向往。",
+      "relations": {},
+      "isPoet": true
+    }
+  ],
+  "chronicles": [
+    {
+      "id": "chr_poets_generated_1769051203283",
+      "date": {
+        "year": 1,
+        "month": 3,
+        "yearTitle": "天宝"
+      },
+      "content": "在长安结识了6位文人雅士：崔琳、柳沧、孟云、薛瑶兰、张旭、李婉。",
+      "characters": [
+        "崔琳",
+        "柳沧",
+        "孟云",
+        "薛瑶兰",
+        "张旭",
+        "李婉"
+      ],
+      "type": "结识"
+    },
+    {
+      "id": "chr_ai_poem_1769051470570",
+      "date": {
+        "year": 1,
+        "month": 3,
+        "yearTitle": "天宝"
+      },
+      "content": "使用\"灵韵补全\"功能创作诗词。\n\n我写道：床前明月光\n更有夜风凉 起身关窗户 还是想爹娘\n\n虽避开了前人成句,但用词过于直白俚俗,意境浅显,仅得合辙押韵而已,尚需努力。",
+      "characters": [
+        "555"
+      ],
+      "type": "创作"
+    },
+    {
+      "id": "chr_exam_1769051950643",
+      "date": {
+        "year": 1,
+        "month": 3,
+        "yearTitle": "天宝"
+      },
+      "content": "参加进士科春闱会试，考题：以春日田园为题,作七言律诗一首,须有起承转合,意境清新。\n\n诗作：《春田》\n春风吹绿满田畴 农夫早起把锄头 燕子归来寻旧巢 桃花盛开水自流 麦苗青青连远岫 菜花黄黄映小楼 最是一年好时节 耕耘不负有收秋\n\n考官评语：此诗格律尚可,然立意浅薄,用词平庸,缺乏诗家气象。虽有田园之形,却无田园之神韵,恐难登金榜。\n\n等第：落榜。格律勉强及格,但立意平庸,缺乏诗意深度",
+      "characters": [
+        "555"
+      ],
+      "type": "科举"
+    },
+    {
+      "id": "chr_ai_poem_1769052248634",
+      "date": {
+        "year": 1,
+        "month": 4,
+        "yearTitle": "天宝"
+      },
+      "content": "使用\"灵韵补全\"功能创作诗词。\n\n我写道：山高云淡鸟飞去\n水远风轻花自开 青松挺立迎朝日 白石横卧送晚霞 溪声潺潺伴月色 林影幽幽映星辉 此景如诗人不见 空留美意在心怀\n\n描绘山水自然之美,鸟去花开,松石相伴,溪林映月,意境清雅而富有层次感。",
+      "characters": [
+        "555"
+      ],
+      "type": "创作"
+    },
+    {
+      "id": "chr_exam_1769052420122",
+      "date": {
+        "year": 1,
+        "month": 4,
+        "yearTitle": "天宝"
+      },
+      "content": "参加贞观二十三年进士科殿试，考题：以'咏史怀古'为题,创作一首七言律诗,抒发对前朝兴衰的感怀之情。\n\n诗作：《古城怀》\n古城墙下草青青 昔日繁华今寂静 王侯将相皆成土 只有春风依旧行 兴亡自古如流水 功名富贵似浮萍 登高望远思前事 夕阳西下鸟归林\n\n考官评语：格律错乱,平仄不调,对仗失当。立意虽有古意,然文辞粗疏,未得诗家三昧。\n\n等第：落榜。格律错误频出,文辞粗陋,未达进士科基本要求",
+      "characters": [
+        "555"
+      ],
+      "type": "科举"
+    },
+    {
+      "id": "chr_ai_poem_1769052895319",
+      "date": {
+        "year": 1,
+        "month": 4,
+        "yearTitle": "天宝"
+      },
+      "content": "使用\"灵韵补全\"功能创作诗词。\n\n我写道：今日红缨在手\n明朝战鼓声催 胡尘万里飞舞 壮士不言归 征马踏霜雪 长枪指落晖 男儿当报国 何惧死生危\n\n诗句描绘了边塞将士手握红缨枪,准备奔赴战场的豪壮情景,展现了男儿报国的忠勇之志。",
+      "characters": [
+        "555"
+      ],
+      "type": "创作"
+    }
+  ],
+  "aiHistory": [],
+  "poetryCollection": [
+    {
+      "id": "ai_poem_1769051470570",
+      "title": "无题",
+      "content": "床前明月光 更有夜风凉 起身关窗户 还是想爹娘",
+      "type": "五言绝句",
+      "author": "555",
+      "isAICreated": true,
+      "playerLines": "床前明月光",
+      "aiLines": "更有夜风凉 起身关窗户 还是想爹娘",
+      "commentary": "虽避开了前人成句,但用词过于直白俚俗,意境浅显,仅得合辙押韵而已,尚需努力。",
+      "date": {
+        "year": 1,
+        "month": 3,
+        "yearTitle": "天宝"
+      }
+    },
+    {
+      "id": "exam_poem_1769051950643",
+      "title": "春田",
+      "content": "春风吹绿满田畴 农夫早起把锄头 燕子归来寻旧巢 桃花盛开水自流 麦苗青青连远岫 菜花黄黄映小楼 最是一年好时节 耕耘不负有收秋",
+      "type": "七言律诗",
+      "examType": "进士科",
+      "grade": "落榜",
+      "commentary": "此诗格律尚可,然立意浅薄,用词平庸,缺乏诗家气象。虽有田园之形,却无田园之神韵,恐难登金榜。",
+      "date": {
+        "year": 1,
+        "month": 3,
+        "yearTitle": "天宝"
+      }
+    },
+    {
+      "id": "ai_poem_1769052248634",
+      "title": "无题",
+      "content": "山高云淡鸟飞去 水远风轻花自开 青松挺立迎朝日 白石横卧送晚霞 溪声潺潺伴月色 林影幽幽映星辉 此景如诗人不见 空留美意在心怀",
+      "type": "七言律诗",
+      "author": "555",
+      "isAICreated": true,
+      "playerLines": "山高云淡鸟飞去",
+      "aiLines": "水远风轻花自开 青松挺立迎朝日 白石横卧送晚霞 溪声潺潺伴月色 林影幽幽映星辉 此景如诗人不见 空留美意在心怀",
+      "commentary": "描绘山水自然之美,鸟去花开,松石相伴,溪林映月,意境清雅而富有层次感。",
+      "date": {
+        "year": 1,
+        "month": 4,
+        "yearTitle": "天宝"
+      }
+    },
+    {
+      "id": "exam_poem_1769052420122",
+      "title": "古城怀",
+      "content": "古城墙下草青青 昔日繁华今寂静 王侯将相皆成土 只有春风依旧行 兴亡自古如流水 功名富贵似浮萍 登高望远思前事 夕阳西下鸟归林",
+      "type": "七言律诗",
+      "examType": "进士科",
+      "grade": "落榜",
+      "commentary": "格律错乱,平仄不调,对仗失当。立意虽有古意,然文辞粗疏,未得诗家三昧。",
+      "date": {
+        "year": 1,
+        "month": 4,
+        "yearTitle": "天宝"
+      }
+    },
+    {
+      "id": "ai_poem_1769052895319",
+      "title": "无题",
+      "content": "今日红缨在手 明朝战鼓声催 胡尘万里飞舞 壮士不言归 征马踏霜雪 长枪指落晖 男儿当报国 何惧死生危",
+      "type": "五言律诗",
+      "author": "555",
+      "isAICreated": true,
+      "playerLines": "今日红缨在手",
+      "aiLines": "明朝战鼓声催 胡尘万里飞舞 壮士不言归 征马踏霜雪 长枪指落晖 男儿当报国 何惧死生危",
+      "commentary": "诗句描绘了边塞将士手握红缨枪,准备奔赴战场的豪壮情景,展现了男儿报国的忠勇之志。",
+      "date": {
+        "year": 1,
+        "month": 4,
+        "yearTitle": "天宝"
+      }
+    }
+  ],
+  "poetryPartyRecords": [],
+  "examRecords": [
+    {
+      "id": "exam_1769051950643",
+      "examTitle": "进士科春闱会试",
+      "examQuestion": "以春日田园为题,作七言律诗一首,须有起承转合,意境清新",
+      "grade": "落榜",
+      "poemTitle": "春田",
+      "poemContent": "春风吹绿满田畴 农夫早起把锄头 燕子归来寻旧巢 桃花盛开水自流 麦苗青青连远岫 菜花黄黄映小楼 最是一年好时节 耕耘不负有收秋",
+      "careerAdvancement": false,
+      "newTitle": "",
+      "date": {
+        "year": 1,
+        "month": 3,
+        "yearTitle": "天宝"
+      }
+    },
+    {
+      "id": "exam_1769052420122",
+      "examTitle": "贞观二十三年进士科殿试",
+      "examQuestion": "以'咏史怀古'为题,创作一首七言律诗,抒发对前朝兴衰的感怀之情",
+      "grade": "落榜",
+      "poemTitle": "古城怀",
+      "poemContent": "古城墙下草青青 昔日繁华今寂静 王侯将相皆成土 只有春风依旧行 兴亡自古如流水 功名富贵似浮萍 登高望远思前事 夕阳西下鸟归林",
+      "careerAdvancement": false,
+      "newTitle": "",
+      "date": {
+        "year": 1,
+        "month": 4,
+        "yearTitle": "天宝"
+      }
+    }
+  ],
+  "pendingPoets": [],
+  "customSceneSettings": {},
+  "gameStarted": true
+}

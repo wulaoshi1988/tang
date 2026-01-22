@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大唐古诗穿越记 - AI诗词养成游戏</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.loli.net/css2?family=Ma+Shan+Zheng&family=ZCOOL+XiaoWei&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #8B4513;
+            --secondary-color: #DAA520;
+            --text-color: #333;
+            --bg-color: #F5F5DC;
+        }
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: var(--bg-color);
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="%23ccc" opacity="0.3"/><circle cx="75" cy="75" r="1" fill="%23ccc" opacity="0.3"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        }
+        
+        .title-font {
+            font-family: 'Ma Shan Zheng', cursive;
+        }
+        
+        .subtitle-font {
+            font-family: 'ZCOOL XiaoWei', serif;
+        }
+        
+        .ancient-border {
+            border: 3px solid var(--primary-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: rgba(255,255,255,0.95);
+        }
+        
+        .poetry-card {
+            border: 2px solid var(--secondary-color);
+            border-radius: 6px;
+            background: linear-gradient(135deg, #FFF8DC 0%, #FFFACD 100%);
+            padding: 16px;
+            margin: 8px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .btn-ancient {
+            background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .btn-ancient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        
+        .btn-ancient:active {
+            transform: translateY(0);
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        
+        .chronicle-item {
+            border-left: 3px solid var(--secondary-color);
+            padding-left: 12px;
+            margin: 12px 0;
+        }
+        
+        .stat-bar {
+            height: 8px;
+            background: #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .stat-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--secondary-color), #B8860B);
+            transition: width 0.5s ease;
+        }
+        
+        .hidden { display: none !important; }
+        
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 底部导航栏 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 2px solid var(--primary-color);
+            z-index: 100;
+        }
+        
+        .nav-btn {
+            flex: 1;
+            padding: 12px 0;
+            text-align: center;
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background: var(--bg-color);
+        }
+        
+        .nav-btn.active {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #B8860B 100%);
+            color: white;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-20">
+    <!-- 开始界面 -->
+    <div id="startScreen" class="flex flex-col items-center justify-center min-h-screen p-4">
+        <div class="ancient-border p-8 max-w-md w-full text-center">
+            <h1 class="title-font text-5xl mb-4" style="color: var(--primary-color);">大唐古诗穿越记</h1>
+            <p class="subtitle-font text-xl mb-6" style="color: var(--secondary-color);">穿越长安，诗酒风流</p>
+            
+            <div id="newGameForm" class="space-y-4">
+                <div class="text-left">
+                    <label class="block mb-2 font-semibold">你的姓名</label>
+                    <input type="text" id="playerName" placeholder="请输入姓名（如：林清照）" 
+                           class="w-full p-3 border-2 rounded-lg focus:border-amber-500 outline-none">
+                </div>
+                
+                <div class="text-left">
+                    <label class="block mb-2 font-semibold">性别</label>
+                    <select id="playerGender" class="w-full p-3 border-2 rounded-lg">
+                        <option value="女">女</option>
+                        <option value="男">男</option>
+                    </select>
+                </div>
+                
+                <button onclick="startGame()" class="btn-ancient w-full text-lg">
+                    开始穿越
+                </button>
+            </div>
+            
+            <div id="loadingMessage" class="hidden mt-4">
+                <div class="loading-spinner mx-auto mb-4"></div>
+                <p>正在穿越到长安城...</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 主游戏界面 -->
+    <div id="gameScreen" class="hidden">
+        <!-- 顶部信息栏 -->
+        <div class="ancient-border m-4 p-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="title-font text-2xl" style="color: var(--primary-color);" id="gameTitle">天宝元年春</h2>
+                    <p class="subtitle-font text-lg" style="color: var(--secondary-color);" id="currentLocation">长安城</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm text-gray-600">文采 <span id="literaryTalent">30</span>/100</p>
+                    <p class="text-sm text-gray-600">声望 <span id="reputation">0</span></p>
+                    <p class="text-sm text-gray-600">诗稿 <span id="poetryCount">0</span>篇</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 主角信息卡 -->
+        <div class="ancient-border m-4 p-4">
+            <div class="flex items-center space-x-4">
+                <div class="w-20 h-20 rounded-full bg-amber-100 flex items-center justify-center text-3xl" id="avatarPlaceholder">
+                    👩
+                </div>
+                <div class="flex-1">
+                    <h3 class="title-font text-xl" id="protagonistName">未命名</h3>
+                    <p class="text-sm text-gray-600" id="protagonistIdentity">游学才女</p>
+                    <div class="mt-2">
+                        <p class="text-xs text-gray-500 mb-1">文采</p>
+                        <div class="stat-bar">
+                            <div class="stat-bar-fill" id="literaryTalentBar" style="width: 30%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 快捷操作 -->
+        <div class="grid grid-cols-4 gap-2 mx-4 mb-4">
+            <button onclick="openCreationModal()" class="btn-ancient text-sm py-2">
+                📝 创作
+            </button>
+            <button onclick="organizeParty()" class="btn-ancient text-sm py-2">
+                🎎 诗会
+            </button>
+            <button onclick="takeExamAction()" class="btn-ancient text-sm py-2">
+                📜 科举
+            </button>
+            <button onclick="nextMonthAction()" class="btn-ancient text-sm py-2">
+                📅 下月
+            </button>
+        </div>
+        
+        <!-- 当前事件 -->
+        <div class="ancient-border m-4 p-4">
+            <h3 class="subtitle-font text-lg mb-3" style="color: var(--primary-color);">本月诗兴</h3>
+            <div id="currentEvents" class="space-y-3">
+                <p class="text-gray-500 text-center">暂无诗兴事件</p>
+            </div>
+        </div>
+        
+        <!-- 诗稿收藏 -->
+        <div class="ancient-border m-4 p-4">
+            <h3 class="subtitle-font text-lg mb-3" style="color: var(--primary-color);">诗稿收藏</h3>
+            <div id="poetryCollection" class="space-y-2 max-h-60 overflow-y-auto">
+                <p class="text-gray-500 text-center">暂无诗稿</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 文人列表界面 -->
+    <div id="poetsScreen" class="hidden pb-20">
+        <div class="ancient-border m-4 p-4">
+            <h2 class="title-font text-2xl mb-4" style="color: var(--primary-color);">长安文人</h2>
+            <div id="poetsList" class="space-y-3">
+                <!-- 文人卡片将动态插入 -->
+            </div>
+        </div>
+        <button onclick="showTab('home')" class="fixed bottom-20 right-4 btn-ancient">
+            返回
+        </button>
+    </div>
+    
+    <!-- 记事界面 -->
+    <div id="recordsScreen" class="hidden pb-20">
+        <div class="ancient-border m-4 p-4">
+            <h2 class="title-font text-2xl mb-4" style="color: var(--primary-color);">游历记事</h2>
+            <div id="chroniclesList" class="space-y-3 max-h-screen overflow-y-auto pb-20">
+                <!-- 记事将动态插入 -->
+            </div>
+        </div>
+        <button onclick="showTab('home')" class="fixed bottom-20 right-4 btn-ancient">
+            返回
+        </button>
+    </div>
+    
+    <!-- 设置界面 -->
+    <div id="settingsScreen" class="hidden pb-20">
+        <div class="ancient-border m-4 p-4">
+            <h2 class="title-font text-2xl mb-4" style="color: var(--primary-color);">⚙️ 设置</h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block mb-2 font-semibold">API 地址</label>
+                    <input type="text" id="apiBaseUrl" placeholder="https://api.openai.com/v1" 
+                           class="w-full p-3 border-2 rounded-lg focus:border-amber-500 outline-none">
+                    <p class="text-xs text-gray-500 mt-1">例如：https://api.openai.com/v1</p>
+                </div>
+                
+                <div>
+                    <label class="block mb-2 font-semibold">API Key</label>
+                    <input type="password" id="apiKey" placeholder="sk-..." 
+                           class="w-full p-3 border-2 rounded-lg focus:border-amber-500 outline-none">
+                    <p class="text-xs text-gray-500 mt-1">你的 OpenAI API 密钥</p>
+                </div>
+                
+                <div>
+                    <label class="block mb-2 font-semibold">模型</label>
+                    <div class="flex space-x-2">
+                        <select id="modelSelect" class="flex-1 p-3 border-2 rounded-lg">
+                            <option value="gpt-3.5-turbo">GPT-3.5 Turbo（推荐）</option>
+                            <option value="gpt-4">GPT-4（质量更高，成本更高）</option>
+                        </select>
+                        <button onclick="fetchModels()" id="fetchModelsBtn" 
+                                class="btn-ancient px-4 text-sm whitespace-nowrap" title="获取可用模型">
+                            📥 获取
+                        </button>
+                    </div>
+                    <p id="modelFetchStatus" class="text-xs text-gray-500 mt-1"></p>
+                </div>
+                
+                <div id="connectionStatus" class="p-3 rounded-lg text-sm bg-gray-100">
+                    <span class="font-semibold">连接状态：</span>
+                    <span id="connectionText">未测试</span>
+                </div>
+                
+                <button onclick="saveSettings()" class="btn-ancient w-full mb-2">
+                    💾 保存设置
+                </button>
+                
+                <button onclick="testConnection()" id="testBtn" 
+                        class="btn-ancient w-full" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%);">
+                    🔌 测试连接
+                </button>
+                
+                <div class="border-t pt-4 mt-4">
+                    <h3 class="font-semibold mb-3">存档管理</h3>
+                    <button onclick="exportSave()" class="btn-ancient w-full mb-2">
+                        📤 导出存档
+                    </button>
+                    <button onclick="document.getElementById('importFile').click()" class="btn-ancient w-full mb-2">
+                        📥 导入存档
+                    </button>
+                    <input type="file" id="importFile" accept=".json" class="hidden" onchange="importSave(this)">
+                    <button onclick="resetGame()" class="btn-ancient w-full bg-red-700" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);">
+                        🔄 重新开始
+                    </button>
+                </div>
+            </div>
+        </div>
+        <button onclick="showTab('home')" class="fixed bottom-20 right-4 btn-ancient">
+            返回
+        </button>
+    </div>
+    
+    <!-- 创作模态框 -->
+    <div id="creationModal" class="modal-overlay hidden">
+        <div class="modal-content max-w-lg">
+            <h2 class="title-font text-2xl mb-4" style="color: var(--primary-color);">📝 诗词创作</h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block mb-2 font-semibold">诗体</label>
+                    <select id="poetryType" class="w-full p-3 border-2 rounded-lg">
+                        <option value="五言绝句">五言绝句（20字）</option>
+                        <option value="七言绝句">七言绝句（28字）</option>
+                        <option value="五言律诗">五言律诗（40字）</option>
+                        <option value="七言律诗">七言律诗（56字）</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block mb-2 font-semibold">输入诗句（前半部分）</label>
+                    <textarea id="playerInput" rows="3" placeholder="例如：床前明月光" 
+                              class="w-full p-3 border-2 rounded-lg focus:border-amber-500 outline-none"></textarea>
+                    <p class="text-xs text-gray-500 mt-1">AI 将自动补全后半部分</p>
+                </div>
+                
+                <button onclick="completePoetryAction()" class="btn-ancient w-full">
+                    ✨ 灵韵补全
+                </button>
+                <button onclick="closeModal('creationModal')" class="btn-ancient w-full" style="background: #666;">
+                    取消
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 诗会结果模态框 -->
+    <div id="partyResultModal" class="modal-overlay hidden">
+        <div class="modal-content max-w-2xl">
+            <h2 class="title-font text-2xl mb-4" style="color: var(--primary-color);">🎎 诗会雅集</h2>
+            <div id="partyResultContent" class="space-y-4">
+                <!-- 诗会结果将动态插入 -->
+            </div>
+            <button onclick="closeModal('partyResultModal')" class="btn-ancient w-full mt-4">
+                关闭
+            </button>
+        </div>
+    </div>
+    
+    <!-- 考试结果模态框 -->
+    <div id="examResultModal" class="modal-overlay hidden">
+        <div class="modal-content max-w-lg">
+            <h2 class="title-font text-2xl mb-4" style="color: var(--primary-color);">📜 科举考试</h2>
+            <div id="examResultContent" class="space-y-4">
+                <!-- 考试结果将动态插入 -->
+            </div>
+            <button onclick="closeModal('examResultModal')" class="btn-ancient w-full mt-4">
+                关闭
+            </button>
+        </div>
+    </div>
+    
+    <!-- 加载遮罩 -->
+    <div id="loadingOverlay" class="modal-overlay hidden">
+        <div class="text-center text-white">
+            <div class="loading-spinner mx-auto mb-4"></div>
+            <p id="loadingText" class="text-xl">正在生成...</p>
+            <p class="text-sm mt-2 text-gray-300">请稍候，AI 正在创作诗词</p>
+        </div>
+    </div>
+    
+    <!-- 底部导航 -->
+    <div class="bottom-nav">
+        <div class="flex">
+            <button onclick="showTab('home')" class="nav-btn active" id="navHome">
+                <div class="text-2xl">🏠</div>
+                <div class="text-xs">主页</div>
+            </button>
+            <button onclick="showTab('poets')" class="nav-btn" id="navPoets">
+                <div class="text-2xl">👥</div>
+                <div class="text-xs">文人</div>
+            </button>
+            <button onclick="showTab('records')" class="nav-btn" id="navRecords">
+                <div class="text-2xl">📚</div>
+                <div class="text-xs">记事</div>
+            </button>
+            <button onclick="showTab('settings')" class="nav-btn" id="navSettings">
+                <div class="text-2xl">⚙️</div>
+                <div class="text-xs">设置</div>
+            </button>
+        </div>
+    </div>
+
+    <script src="tang_poetry_game.js"></script>
+    <script>
+        // ==================== 游戏逻辑 ====================
+        
+        // 等待脚本加载完成后获取函数
+        let gameFunctions = null;
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('页面加载完成，等待游戏脚本...');
+            
+            // 检查游戏脚本是否加载
+            setTimeout(() => {
+                if (window.tangPoetryGame) {
+                    gameFunctions = window.tangPoetryGame;
+                    console.log('游戏函数加载成功:', Object.keys(gameFunctions));
+                    loadSavedGame();
+                } else {
+                    console.error('游戏脚本未加载，请检查 tang_poetry_game.js 文件');
+                    alert('游戏脚本加载失败，请确保 tang_poetry_game.js 文件在同一目录下');
+                }
+            }, 100);
+        });
+        
+        // 获取游戏函数
+        function getGameFunctions() {
+            if (!gameFunctions) {
+                gameFunctions = window.tangPoetryGame;
+                if (!gameFunctions) {
+                    throw new Error('游戏函数未加载，请刷新页面');
+                }
+            }
+            return gameFunctions;
+        }
+        
+        // 加载存档
+        function loadSavedGame() {
+            try {
+                const functions = getGameFunctions();
+                if (functions.loadGameData()) {
+                    currentGameData = functions.getGameData();
+                    showGameScreen();
+                    updateUI();
+                }
+            } catch (error) {
+                console.error('加载存档失败:', error);
+            }
+        }
+        
+        // 开始新游戏
+        async function startGame() {
+            const playerName = document.getElementById('playerName').value.trim();
+            if (!playerName) {
+                alert('请输入姓名');
+                return;
+            }
+            
+            const gender = document.getElementById('playerGender').value;
+            
+            document.getElementById('newGameForm').classList.add('hidden');
+            document.getElementById('loadingMessage').classList.remove('hidden');
+            
+            try {
+                const functions = getGameFunctions();
+                await functions.startNewGame(playerName, gender);
+                currentGameData = functions.getGameData();
+                showGameScreen();
+                updateUI();
+            } catch (error) {
+                console.error('开始游戏失败:', error);
+                alert('开始游戏失败：' + error.message);
+                document.getElementById('newGameForm').classList.remove('hidden');
+                document.getElementById('loadingMessage').classList.add('hidden');
+            }
+        }
+        
+        // 显示游戏界面
+        function showGameScreen() {
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+        }
+        
+        // 更新UI
+        function updateUI() {
+            if (!currentGameData) return;
+            
+            const { protagonist, world, poetryCollection } = currentGameData;
+            
+            // 更新顶部信息
+            document.getElementById('gameTitle').textContent = `${world.yearTitle}${world.year}年${world.season}`;
+            document.getElementById('currentLocation').textContent = world.currentLocation;
+            document.getElementById('literaryTalent').textContent = protagonist.stats.literaryTalent;
+            document.getElementById('reputation').textContent = protagonist.stats.reputation;
+            document.getElementById('poetryCount').textContent = protagonist.poetryCount || 0;
+            
+            // 更新主角信息
+            document.getElementById('protagonistName').textContent = protagonist.name;
+            document.getElementById('protagonistIdentity').textContent = protagonist.identity;
+            document.getElementById('avatarPlaceholder').textContent = protagonist.gender === '女' ? '👩' : '👨';
+            
+            // 更新文采进度条
+            document.getElementById('literaryTalentBar').style.width = protagonist.stats.literaryTalent + '%';
+            
+            // 更新诗稿收藏
+            updatePoetryCollection();
+            
+            // 更新文人列表
+            updatePoetsList();
+            
+            // 更新记事
+            updateChronicles();
+        }
+        
+        // 更新诗稿收藏
+        function updatePoetryCollection() {
+            const container = document.getElementById('poetryCollection');
+            const poems = currentGameData.poetryCollection || [];
+            
+            if (poems.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center">暂无诗稿</p>';
+                return;
+            }
+            
+            container.innerHTML = poems.slice(-10).reverse().map(poem => `
+                <div class="poetry-card">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm text-amber-700 font-semibold">${poem.type}</span>
+                        <span class="text-xs text-gray-500">${poem.date.yearTitle}${poem.date.year}年${poem.date.month}月</span>
+                    </div>
+                    <h4 class="font-bold mb-1" style="color: var(--primary-color);">${poem.title}</h4>
+                    <p class="text-center my-2 leading-loose">${poem.content}</p>
+                    ${poem.commentary ? `<p class="text-xs text-gray-600 mt-2">${poem.commentary}</p>` : ''}
+                    ${poem.author ? `<p class="text-xs text-gray-500 text-right">— ${poem.author}</p>` : ''}
+                </div>
+            `).join('');
+        }
+        
+        // 更新文人列表
+        function updatePoetsList() {
+            const container = document.getElementById('poetsList');
+            const poets = currentGameData.characters.filter(c => c.isPoet) || [];
+            
+            if (poets.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center">暂无文人</p>';
+                return;
+            }
+            
+            container.innerHTML = poets.map(poet => `
+                <div class="poetry-card">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-xl">
+                            ${poet.gender === '女' ? '👩' : '👨'}
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="font-bold" style="color: var(--primary-color);">${poet.name}</h4>
+                            <p class="text-sm text-gray-600">${poet.courtesyName || ''} · ${poet.identity}</p>
+                            <p class="text-xs text-gray-500">${poet.poetryStyle}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm text-amber-700">文采 ${poet.literaryTalent}</p>
+                            <p class="text-sm text-amber-700">声望 ${poet.reputation}</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // 更新记事
+        function updateChronicles() {
+            const container = document.getElementById('chroniclesList');
+            const chronicles = currentGameData.chronicles || [];
+            
+            if (chronicles.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center">暂无记事</p>';
+                return;
+            }
+            
+            container.innerHTML = chronicles.slice(-20).reverse().map(item => `
+                <div class="chronicle-item">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-xs text-amber-700">${item.date.yearTitle}${item.date.year}年${item.date.month}月</span>
+                        <span class="text-xs text-gray-500">${item.type}</span>
+                    </div>
+                    <p class="text-sm whitespace-pre-line">${item.content}</p>
+                </div>
+            `).join('');
+        }
+        
+        // 切换标签页
+        function showTab(tab) {
+            // 隐藏所有界面
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('poetsScreen').classList.add('hidden');
+            document.getElementById('recordsScreen').classList.add('hidden');
+            document.getElementById('settingsScreen').classList.add('hidden');
+            
+            // 移除所有导航按钮的 active 类
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            
+            // 显示对应界面和激活导航按钮
+            if (tab === 'home') {
+                document.getElementById('gameScreen').classList.remove('hidden');
+                document.getElementById('navHome').classList.add('active');
+            } else if (tab === 'poets') {
+                document.getElementById('poetsScreen').classList.remove('hidden');
+                document.getElementById('navPoets').classList.add('active');
+            } else if (tab === 'records') {
+                document.getElementById('recordsScreen').classList.remove('hidden');
+                document.getElementById('navRecords').classList.add('active');
+            } else if (tab === 'settings') {
+                document.getElementById('settingsScreen').classList.remove('hidden');
+                document.getElementById('navSettings').classList.add('active');
+                
+                // 填充设置
+                document.getElementById('apiBaseUrl').value = currentGameData.settings.apiBaseUrl || '';
+                document.getElementById('apiKey').value = currentGameData.settings.apiKey || '';
+                document.getElementById('modelSelect').value = currentGameData.settings.model || 'gpt-3.5-turbo';
+            }
+        }
+        
+        // 打开创作模态框
+        function openCreationModal() {
+            document.getElementById('creationModal').classList.remove('hidden');
+        }
+        
+        // 关闭模态框
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+        
+        // 显示加载
+        function showLoading(text = '正在生成...') {
+            document.getElementById('loadingText').textContent = text;
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+        }
+        
+        // 隐藏加载
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+        
+        // 诗词创作
+        async function completePoetryAction() {
+            const userInput = document.getElementById('playerInput').value.trim();
+            const poetryType = document.getElementById('poetryType').value;
+            
+            if (!userInput) {
+                alert('请输入诗句');
+                return;
+            }
+            
+            closeModal('creationModal');
+            showLoading('正在补全诗句...');
+            
+            try {
+                const functions = getGameFunctions();
+                const result = await functions.completePoetry(userInput, poetryType);
+                currentGameData = functions.getGameData();
+                updateUI();
+                alert('✅ 补全成功！\n\n' + result.playerLines + '\n' + result.aiLines);
+            } catch (error) {
+                console.error('补全失败:', error);
+                alert('❌ 补全失败：' + error.message);
+            }
+            
+            hideLoading();
+        }
+        
+        // 组织诗会
+        async function organizeParty() {
+            if (!currentGameData.settings.apiKey || !currentGameData.settings.apiBaseUrl) {
+                alert('请先在"设置"中配置 API\n\n点击底部导航栏的 ⚙️ 设置');
+                showTab('settings');
+                return;
+            }
+            
+            showLoading('正在组织诗会...');
+            
+            try {
+                const functions = getGameFunctions();
+                const result = await functions.organizePoetryParty();
+                currentGameData = functions.getGameData();
+                updateUI();
+                
+                // 显示诗会结果
+                const content = document.getElementById('partyResultContent');
+                content.innerHTML = `
+                    <p class="mb-3">${result.partyDescription}</p>
+                    <div class="text-center mb-4 p-4" style="background: var(--bg-color); border-radius: 8px;">
+                        <span class="text-lg" style="color: var(--secondary-color);">🏆 魁首</span>
+                        <h3 class="title-font text-3xl mt-2" style="color: var(--primary-color);">${result.champion}</h3>
+                        <p class="text-sm text-gray-600 mt-1">${result.championReason}</p>
+                    </div>
+                    <div class="space-y-2">
+                        ${result.participants.map(p => `
+                            <div class="poetry-card">
+                                <div class="flex justify-between">
+                                    <span class="font-bold">${p.name}（第${p.ranking}名）</span>
+                                    <span class="text-sm text-amber-700">声望${p.reputationChange > 0 ? '+' : ''}${p.reputationChange}</span>
+                                </div>
+                                <h4 class="font-bold">《${p.poemTitle}》</h4>
+                                <p class="text-center my-2">${p.poemContent}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                document.getElementById('partyResultModal').classList.remove('hidden');
+            } catch (error) {
+                console.error('诗会失败:', error);
+                alert('❌ 诗会失败：' + error.message);
+            }
+            
+            hideLoading();
+        }
+        
+        // 参加考试
+        async function takeExamAction() {
+            if (!currentGameData.settings.apiKey || !currentGameData.settings.apiBaseUrl) {
+                alert('请先在"设置"中配置 API\n\n点击底部导航栏的 ⚙️ 设置');
+                showTab('settings');
+                return;
+            }
+            
+            const examType = currentGameData.world.month <= 6 ? '进士科' : '明经科';
+            showLoading(`正在参加${examType}...`);
+            
+            try {
+                const functions = getGameFunctions();
+                const result = await functions.takeExam(examType);
+                currentGameData = functions.getGameData();
+                updateUI();
+                
+                // 显示考试结果
+                const content = document.getElementById('examResultContent');
+                const gradeColors = {
+                    '一甲': '#FFD700',
+                    '二甲': '#C0C0C0',
+                    '三甲': '#CD7F32',
+                    '落榜': '#999'
+                };
+                
+                content.innerHTML = `
+                    <p class="mb-3">${result.examQuestion}</p>
+                    <div class="text-center mb-4 p-4" style="background: var(--bg-color); border-radius: 8px;">
+                        <span class="text-lg" style="color: var(--secondary-color);">等第</span>
+                        <h3 class="title-font text-4xl mt-2" style="color: ${gradeColors[result.grade] || '#333'};">${result.grade}</h3>
+                        <p class="text-sm text-gray-600 mt-1">${result.gradeReason}</p>
+                    </div>
+                    <div class="poetry-card">
+                        <h4 class="font-bold text-center mb-2">《${result.poemTitle}》</h4>
+                        <p class="text-center my-2">${result.poemContent}</p>
+                        <p class="text-sm text-gray-600 mt-2">考官评语：${result.examinerComment}</p>
+                    </div>
+                    ${result.careerAdvancement ? `<p class="text-center mt-4 text-lg p-3 rounded" style="color: var(--secondary-color); background: var(--bg-color);">🎉 获得官职：${result.newTitle}</p>` : ''}
+                `;
+                document.getElementById('examResultModal').classList.remove('hidden');
+            } catch (error) {
+                console.error('考试失败:', error);
+                alert('❌ 考试失败：' + error.message);
+            }
+            
+            hideLoading();
+        }
+        
+        // 下个月
+        async function nextMonthAction() {
+            showLoading('时间流逝中...');
+            
+            try {
+                const functions = getGameFunctions();
+                await functions.nextMonth();
+                currentGameData = functions.getGameData();
+                updateUI();
+                alert('✅ 时间推进成功！');
+            } catch (error) {
+                console.error('推进时间失败:', error);
+                alert('❌ 推进时间失败：' + error.message);
+            }
+            
+            hideLoading();
+        }
+        
+        // 保存设置
+        function saveSettings() {
+            const apiBaseUrl = document.getElementById('apiBaseUrl').value.trim();
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const model = document.getElementById('modelSelect').value;
+            
+            if (!apiBaseUrl || !apiKey) {
+                alert('请填写完整的 API 配置信息');
+                return;
+            }
+            
+            const functions = getGameFunctions();
+            functions.updateSettings({
+                apiBaseUrl: apiBaseUrl,
+                apiKey: apiKey,
+                model: model
+            });
+            
+            currentGameData = functions.getGameData();
+            alert('✅ 设置已保存！');
+        }
+        
+        // 测试连接
+        async function testConnection() {
+            const functions = getGameFunctions();
+            const statusDiv = document.getElementById('connectionStatus');
+            const statusText = document.getElementById('connectionText');
+            const testBtn = document.getElementById('testBtn');
+            
+            testBtn.disabled = true;
+            testBtn.textContent = '⏳ 测试中...';
+            statusText.textContent = '测试中...';
+            statusDiv.className = 'p-3 rounded-lg text-sm bg-blue-100';
+            
+            try {
+                const result = await functions.testAPIConnection();
+                
+                if (result.success) {
+                    statusText.textContent = '✅ ' + result.message;
+                    statusDiv.className = 'p-3 rounded-lg text-sm bg-green-100';
+                } else {
+                    statusText.textContent = '❌ ' + result.message;
+                    statusDiv.className = 'p-3 rounded-lg text-sm bg-red-100';
+                }
+            } catch (error) {
+                statusText.textContent = '❌ 测试失败: ' + error.message;
+                statusDiv.className = 'p-3 rounded-lg text-sm bg-red-100';
+            }
+            
+            testBtn.disabled = false;
+            testBtn.textContent = '🔌 测试连接';
+        }
+        
+        // 获取可用模型
+        async function fetchModels() {
+            const functions = getGameFunctions();
+            const statusText = document.getElementById('modelFetchStatus');
+            const fetchBtn = document.getElementById('fetchModelsBtn');
+            const modelSelect = document.getElementById('modelSelect');
+            
+            fetchBtn.disabled = true;
+            fetchBtn.textContent = '⏳';
+            statusText.textContent = '正在获取模型列表...';
+            
+            try {
+                const result = await functions.fetchAvailableModels();
+                
+                if (result.success && result.models.length > 0) {
+                    // 清空并重新填充模型列表
+                    modelSelect.innerHTML = result.models.map(model => 
+                        `<option value="${model}">${model}</option>`
+                    ).join('');
+                    
+                    // 选中当前使用的模型
+                    if (currentGameData.settings.model) {
+                        modelSelect.value = currentGameData.settings.model;
+                    }
+                    
+                    statusText.textContent = `✅ 成功获取 ${result.models.length} 个模型`;
+                    statusText.className = 'text-xs text-green-600 mt-1';
+                } else {
+                    statusText.textContent = result.message;
+                    statusText.className = 'text-xs text-orange-600 mt-1';
+                }
+            } catch (error) {
+                statusText.textContent = '❌ 获取失败: ' + error.message;
+                statusText.className = 'text-xs text-red-600 mt-1';
+            }
+            
+            fetchBtn.disabled = false;
+            fetchBtn.textContent = '📥 获取';
+        }
+        
+        // 导出存档
+        function exportSave() {
+            try {
+                const functions = getGameFunctions();
+                functions.exportGameData();
+            } catch (error) {
+                alert('导出失败：' + error.message);
+            }
+        }
+        
+        // 导入存档
+        function importSave(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            try {
+                const functions = getGameFunctions();
+                functions.importGameData(file).then(() => {
+                    currentGameData = functions.getGameData();
+                    updateUI();
+                    alert('✅ 导入成功！');
+                }).catch(error => {
+                    alert('导入失败：' + error.message);
+                });
+            } catch (error) {
+                alert('导入失败：' + error.message);
+            }
+        }
+        
+        // 重新开始
+        function resetGame() {
+            if (confirm('⚠️ 确定要重新开始吗？\n\n所有进度将丢失，无法恢复。')) {
+                localStorage.removeItem('tangPoetryGame');
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
