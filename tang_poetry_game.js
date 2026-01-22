@@ -809,24 +809,46 @@ async function organizePoetryParty() {
     if (!gameData.settings.apiKey || !gameData.settings.apiBaseUrl) {
         throw new Error('请先配置API才能参加诗会');
     }
-    
+
     // 选择参与者（文采值最高的5位文人）
     const eligiblePoets = gameData.characters
         .filter(c => c.isPoet && (c.literaryTalent || 50) >= 30)
         .sort((a, b) => (b.literaryTalent || 50) - (a.literaryTalent || 50))
         .slice(0, 5);
-    
+
     if (eligiblePoets.length < 3) {
         throw new Error('文人不足，无法举办诗会。请先结识更多文人。');
     }
-    
+
     const participants = [gameData.protagonist, ...eligiblePoets];
     const userPrompt = generatePoetryPartyPrompt(participants);
-    
+
     try {
         const response = await callAI(userPrompt, poetryPartySystemPrompt);
         const result = extractJSON(response);
+
+        // 调试：打印 AI 返回的原始数据
+        console.log('AI 返回的原始数据：', result);
+
         const data = JSON.parse(result);
+
+        // 验证数据格式
+        if (!data) {
+            throw new Error('AI 返回数据为空，请重试');
+        }
+
+        if (!data.participants || !Array.isArray(data.participants)) {
+            console.error('数据格式错误：', data);
+            throw new Error('AI 返回的数据格式不正确（缺少 participants 数组）。请重试。');
+        }
+
+        if (!data.partyDescription) {
+            throw new Error('AI 返回的数据缺少 partyDescription 字段');
+        }
+
+        if (!data.champion) {
+            throw new Error('AI 返回的数据缺少 champion 字段');
+        }
         
         // 处理诗会结果
         const partyRecord = {
