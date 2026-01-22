@@ -287,22 +287,30 @@
     <div id="settingsScreen" class="hidden pb-20">
         <div class="ancient-border m-4 p-4">
             <h2 class="title-font text-2xl mb-4" style="color: var(--primary-color);">⚙️ 设置</h2>
-            
+
+            <!-- 静态托管提示 -->
+            <div class="mb-4 p-3 bg-green-50 border-l-4 border-green-500 rounded">
+                <p class="text-sm text-green-800">
+                    <strong>✅ 部署在 GitHub Pages</strong><br>
+                    无需 Python，通过 HTTPS 直接访问，稳定可靠。
+                </p>
+            </div>
+
             <div class="space-y-4">
                 <div>
                     <label class="block mb-2 font-semibold">API 地址</label>
-                    <input type="text" id="apiBaseUrl" placeholder="https://api.openai.com/v1" 
+                    <input type="text" id="apiBaseUrl" placeholder="https://api.openai.com/v1"
                            class="w-full p-3 border-2 rounded-lg focus:border-amber-500 outline-none">
-                    <p class="text-xs text-gray-500 mt-1">例如：https://api.openai.com/v1</p>
+                    <p class="text-xs text-gray-500 mt-1">例如：https://api.openai.com/v1 或 https://api.code-relay.com/v1</p>
                 </div>
-                
+
                 <div>
                     <label class="block mb-2 font-semibold">API Key</label>
-                    <input type="password" id="apiKey" placeholder="sk-..." 
+                    <input type="password" id="apiKey" placeholder="sk-..."
                            class="w-full p-3 border-2 rounded-lg focus:border-amber-500 outline-none">
-                    <p class="text-xs text-gray-500 mt-1">你的 OpenAI API 密钥</p>
+                    <p class="text-xs text-gray-500 mt-1">你的 API 密钥（支持 OpenAI、Anthropic 等）</p>
                 </div>
-                
+
                 <div>
                     <label class="block mb-2 font-semibold">模型</label>
                     <div class="flex space-x-2">
@@ -310,28 +318,28 @@
                             <option value="gpt-3.5-turbo">GPT-3.5 Turbo（推荐）</option>
                             <option value="gpt-4">GPT-4（质量更高，成本更高）</option>
                         </select>
-                        <button onclick="fetchModels()" id="fetchModelsBtn" 
+                        <button onclick="fetchModels()" id="fetchModelsBtn"
                                 class="btn-ancient px-4 text-sm whitespace-nowrap" title="获取可用模型">
                             📥 获取
                         </button>
                     </div>
                     <p id="modelFetchStatus" class="text-xs text-gray-500 mt-1"></p>
                 </div>
-                
+
                 <div id="connectionStatus" class="p-3 rounded-lg text-sm bg-gray-100">
                     <span class="font-semibold">连接状态：</span>
                     <span id="connectionText">未测试</span>
                 </div>
-                
+
                 <button onclick="saveSettings()" class="btn-ancient w-full mb-2">
                     💾 保存设置
                 </button>
-                
-                <button onclick="testConnection()" id="testBtn" 
+
+                <button onclick="testConnection()" id="testBtn"
                         class="btn-ancient w-full" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%);">
                     🔌 测试连接
                 </button>
-                
+
                 <div class="border-t pt-4 mt-4">
                     <h3 class="font-semibold mb-3">存档管理</h3>
                     <button onclick="exportSave()" class="btn-ancient w-full mb-2">
@@ -344,6 +352,16 @@
                     <button onclick="resetGame()" class="btn-ancient w-full bg-red-700" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);">
                         🔄 重新开始
                     </button>
+                </div>
+
+                <div class="border-t pt-4 mt-4">
+                    <h3 class="font-semibold mb-2">使用说明</h3>
+                    <ul class="text-xs text-gray-600 space-y-1">
+                        <li>• 直接双击 HTML 文件即可运行</li>
+                        <li>• 所有 API 请求通过 CORS 代理中转</li>
+                        <li>• 代理可能会稍微增加响应时间</li>
+                        <li>• 首次运行建议点击"测试连接"</li>
+                    </ul>
                 </div>
             </div>
         </div>

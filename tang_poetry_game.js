@@ -423,37 +423,37 @@ ${literaryTalent}/100
 // ==================== 工具函数 ====================
 
 /**
- * 调用 AI API（复用《桃源记》逻辑）
+ * 调用 AI API（GitHub Pages 静态托管版本 - 无需 CORS 代理）
  */
 async function callAI(prompt, systemPrompt = '', retryCount = 0, options = {}) {
     const maxRetries = options.maxRetries || 3;
     const useStream = options.stream || false;
     const timeoutMs = options.timeout || 180000;
-    
+
     const baseUrl = gameData.settings.apiBaseUrl || 'https://api.openai.com/v1';
     const apiKey = gameData.settings.apiKey;
     const model = gameData.settings.model || 'gpt-3.5-turbo';
-    
+
     if (!apiKey) throw new Error('请先配置API Key');
     if (!baseUrl) throw new Error('请先配置API地址');
-    
+
     const messages = [];
     if (systemPrompt) {
         messages.push({ role: 'system', content: systemPrompt });
     }
     messages.push({ role: 'user', content: prompt });
-    
+
     try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-        
+
         const requestBody = {
             model: model,
             messages: messages,
             temperature: 0.8,
             stream: useStream
         };
-        
+
         const response = await fetch(`${baseUrl}/chat/completions`, {
             method: 'POST',
             headers: {
@@ -463,9 +463,9 @@ async function callAI(prompt, systemPrompt = '', retryCount = 0, options = {}) {
             body: JSON.stringify(requestBody),
             signal: controller.signal
         });
-        
+
         clearTimeout(timeoutId);
-        
+
         if (!response.ok) {
             const errorText = await response.text();
             if (response.status === 401 || response.status === 403) {
@@ -484,12 +484,12 @@ async function callAI(prompt, systemPrompt = '', retryCount = 0, options = {}) {
             }
             throw new Error(`API 调用失败：${errorText}`);
         }
-        
+
         const data = await response.json();
         const content = data.choices[0]?.message?.content;
-        
+
         return content;
-        
+
     } catch (error) {
         if (error.name === 'AbortError' && retryCount < maxRetries) {
             return callAI(prompt, systemPrompt, retryCount + 1, {
