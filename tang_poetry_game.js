@@ -27,15 +27,41 @@ const POETRY_TYPES = {
     '七言律诗': { chars: 7, lines: 8, rhymeLines: [1, 3, 5, 7], parallelLines: [2, 3, 4, 5] }
 };
 
+const MONTHLY_EVENT_TYPES = {
+    POETRY_INSPIRATION: '诗词灵感',
+    SEASONAL_ACTIVITY: '季节活动',
+    HISTORICAL_EVENT: '历史事件',
+    RANDOM_ENCOUNTER: '偶遇文人',
+    CELEBRITY_VISIT: '名士来访'
+};
+
+const MOOD_TYPES = ['欣喜', '平静', '忧愁', '愤怒', '感伤', '豪迈'];
+
+const GIFT_ITEMS = [
+    { id: 'wine', name: '美酒', price: 100, intimacyBonus: 5, description: '一壶佳酿，醉人心脾' },
+    { id: 'tea', name: '名贵茶叶', price: 300, intimacyBonus: 8, description: '顾渚紫笋，清香四溢' },
+    { id: 'stationery', name: '文房四宝', price: 200, intimacyBonus: 10, description: '湖笔徽墨，宣纸端砚' },
+    { id: 'book', name: '珍本书籍', price: 500, intimacyBonus: 15, description: '孤本典籍，价值连城' },
+    { id: 'painting', name: '名家字画', price: 800, intimacyBonus: 20, description: '丹青妙笔，意境深远' },
+    { id: 'guqin', name: '古琴', price: 1000, intimacyBonus: 25, description: '焦尾遗音，高山流水' }
+];
+
+const TANG_ERAS = {
+    '初唐': { years: '618-712', description: '唐朝建立至玄宗开元前' },
+    '盛唐': { years: '712-762', description: '开元盛世至安史之乱' },
+    '中唐': { years: '762-827', description: '安史之乱后至文宗时期' },
+    '晚唐': { years: '827-907', description: '文宗后至唐朝灭亡' }
+};
+
 // ==================== 游戏默认数据 ====================
 
 function createDefaultGameData() {
     return {
         // API 配置（已预设）
         settings: {
-            apiBaseUrl: 'https://api.code-relay.com/v1',
-            apiKey: 'sk-9mETcZgCAi1oaR1SI9IarN5H862gOW7Bg46MwB0F5adtQtaV',
-            model: 'gemini-3-pro-preview',  // 默认模型
+            apiBaseUrl: '',
+            apiKey: '',
+            model: 'gpt-3.5-turbo',  // 默认模型
             availableModels: ['gemini-3-pro-preview', 'gpt-3.5-turbo', 'gpt-4'],  // 可用模型列表
             lastModelFetch: null,  // 上次获取模型的时间
             connectionStatus: 'unknown'  // 连接状态: unknown, testing, success, failed
@@ -98,6 +124,8 @@ function createDefaultGameData() {
         examRecords: [],                   // 科举记录
         pendingPoets: [],                  // 待添加的AI文人
         customSceneSettings: {},           // 自定义场景设置
+        dialogueHistory: {},               // 对话历史 { poet_id: [{role, content, timestamp}] }
+        currentMonthEvents: [],            // 当月事件列表
         gameStarted: false
     };
 }
@@ -108,54 +136,65 @@ let blobUrlCache = new Map();
 // ==================== Prompt 定义 ====================
 
 /**
- * Prompt 1：长安文人系统生成
+ * Prompt 1：真实唐代诗人系统生成
  */
-const poetSystemPrompt = `你是唐代长安城的文人档案管理员，精通唐诗格律与历史典故。
+const poetSystemPrompt = `你是唐代文学史专家，精通唐代诗人生平与作品。
 
 【核心原则】
-1. 生成的人物必须符合唐代社会阶层（皇室、官宦、名士、隐逸、商贾、市井）
-2. 诗词创作需严格符合格律（平仄、押韵、对仗）
-3. 人物性格需与诗风统一（如：豪放不羁者写边塞诗，婉约细腻者写闺怨诗）
-4. 避免使用真实唐代名人姓名，但可模仿其风格
-5. 所有数值必须是整数，文本字段不能为空`;
+1. 必须生成真实的唐代历史诗人（如李白、杜甫、王维、白居易等）
+2. 诗人资料必须符合历史事实（生卒年、字号、官职、代表作等）
+3. 代表作必须是该诗人的真实作品，不可杜撰
+4. 诗风描述需准确反映该诗人的创作特点
+5. 人物介绍需包含真实的历史背景和生平事迹`;
 
 function generatePoetsPrompt(count = 6) {
-    return `请为《大唐古诗穿越记》生成 ${count} 位长安城的文人角色。
+    const eraExamples = {
+        '初唐': '王勃、杨炯、卢照邻、骆宾王、陈子昂、宋之问',
+        '盛唐': '李白、杜甫、王维、孟浩然、王昌龄、高适、岑参',
+        '中唐': '白居易、韩愈、柳宗元、刘禹锡、元稹、贾岛',
+        '晚唐': '李商隐、杜牧、温庭筠、韦庄、罗隐'
+    };
+    
+    return `请为《大唐古诗穿越记》生成 ${count} 位真实的唐代历史诗人。
 
-【世界背景】
-- 时间：架空唐朝盛世（类似开元、天宝年间）
-- 地点：长安城（东市、西市、曲江、终南山、大明宫等）
-- 主角：穿越而来的现代诗词爱好者
+【重要】必须是真实存在的唐代诗人，资料需符合历史事实！
+
+【各时期代表诗人参考】
+- 初唐（618-712）：${eraExamples['初唐']}
+- 盛唐（712-762）：${eraExamples['盛唐']}
+- 中唐（762-827）：${eraExamples['中唐']}
+- 晚唐（827-907）：${eraExamples['晚唐']}
 
 【人物模板要求】
 请返回包含 ${count} 个完整对象的 JSON 数组，每个对象结构如下：
 {
-    "name": "三字姓名（姓+名，符合唐代取名习惯。姓氏如：李、杜、王、白、柳、崔等；名需文雅，如：清照、易安、摩诘、太白等风格，但禁止使用真实名人姓名）",
-    "courtesyName": "表字（2字，如：太白、摩诘、少陵等风格）",
+    "name": "诗人姓名（真实历史人物，如：李白、杜甫、王维）",
+    "courtesyName": "表字（真实的，如：太白、子美、摩诘）",
+    "nickname": "号或别称（如：诗仙、诗圣、诗佛）",
     "gender": "男或女",
-    "age": 20-60 之间的整数,
-    "identity": "身份职业（从以下选择：翰林学士、礼部侍郎、边塞将军、终南山隐士、西市商贾、曲江歌姬、寺观诗僧、名门闺秀、新科举人等）",
-    "socialClass": "社会阶层（皇室/权贵/名门/寒门/市井/隐逸）",
-    "poetryStyle": "诗风描述（20-40字，如：豪放飘逸、沉郁顿挫、清新自然、婉约含蓄、悲壮苍凉等）",
-    "specialty": "擅长体裁（从以下选择：五言绝句/七言绝句/五言律诗/七言律诗/古风歌行/乐府诗）",
-    "signatureWork": "代表作（一首完整的诗，需严格符合格律。五言绝句20字，七言绝句28字，律诗56字）",
-    "signatureWorkTitle": "代表作诗题（2-4字）",
-    "reputation": 声望值（0-100的整数，影响诗会邀请和朝堂机会）,
-    "charm": 魅力值（30-80的整数，影响社交）,
-    "literaryTalent": 文采值（40-90的整数，影响诗词创作质量）,
-    "socialInfluence": 社交影响力（0-50的整数，影响人脉资源）,
-    "introduction": "人物介绍（50-80字，包含出身背景、性格特点、诗词偏好、在长安城的社交圈层。需符合唐代社会背景，如：出身世族，曾游历西域，诗风豪放；或，终南山隐居，不仕朝堂，诗风清幽）"
+    "birthYear": 出生年份（如701）,
+    "deathYear": 去世年份（如762）,
+    "era": "所属时期（初唐/盛唐/中唐/晚唐）",
+    "identity": "主要身份官职（真实的，如：翰林供奉、左拾遗、尚书右丞）",
+    "birthplace": "籍贯（如：陇西成纪、巩县、太原祁县）",
+    "poetryStyle": "诗风描述（20-40字，准确描述该诗人的创作风格特点）",
+    "specialty": "擅长体裁（如：七言绝句、五言律诗、古风歌行、乐府诗）",
+    "signatureWork": "代表作原文（必须是该诗人的真实作品，完整诗句）",
+    "signatureWorkTitle": "代表作诗题（真实诗题）",
+    "literaryTalent": 文采值（70-100的整数，根据历史地位评定）,
+    "reputation": 声望值（50-100的整数，根据当时及后世影响力）,
+    "introduction": "人物介绍（80-150字，包含真实的生平事迹、重要经历、文学成就、与其他诗人的交往等历史信息）",
+    "famousQuotes": ["名句1", "名句2", "名句3"]
 }
 
 【生成要求】
-1. 生成恰好 ${count} 位不同身份和诗风的文人
-2. 男女比例大致均衡（如 4男2女或3男3女）
-3. 年龄分布合理（20-35岁青壮年为主，40-60岁名士为辅）
-4. 社会阶层需多样化（涵盖权贵、寒门、市井、隐逸）
-5. 诗风需与身份和性格统一（如：边塞将军写"边塞诗"，闺秀写"闺怨诗"）
-6. 所有诗作必须严格符合格律（偶数句押韵，律诗中间两联对仗）
-7. 所有数值必须是整数
-8. 所有字段必须填写具体内容，禁止留空
+1. 生成恰好 ${count} 位不同时期的真实唐代诗人
+2. 尽量覆盖不同时期（初唐、盛唐、中唐、晚唐）
+3. 所有信息必须符合历史事实
+4. 代表作必须是该诗人的真实作品
+5. 名句必须是该诗人的真实诗句
+6. 所有数值必须是整数
+7. 不要生成重复的诗人
 
 【重要提示】
 - 只返回 JSON 数组，开头必须是 [，结尾必须是 ]
@@ -163,19 +202,28 @@ function generatePoetsPrompt(count = 6) {
 }
 
 /**
- * Prompt 2：月度场景创作生成
+ * Prompt 2：月度事件系统（增强版）
  */
-const sceneSystemPrompt = `你是唐代长安城的事件记录官，擅长用诗歌记录生活片段。
+const monthlyEventSystemPrompt = `你是唐代长安城的事件记录官，擅长记录文人生活中的各类事件。
 
 【核心任务】
-根据当前季节、天气、主角位置、社交活动，生成1-2件本月的诗兴事件。
+根据当前季节、天气、主角位置、社交关系，生成1-3件本月的事件。
+
+【事件类型】
+1. 诗词灵感：触发诗词创作，需生成一首诗
+2. 季节活动：曲江踏青、重阳登高等节令活动
+3. 历史事件：边关战报、朝堂变动等大事件
+4. 偶遇文人：街头邂逅某位文人，触发对话
+5. 名士来访：有名望的文人主动拜访
 
 【生成原则】
-1. 事件必须符合唐代长安背景（如：曲江雅集、东市购墨、终南山游历、大明宫应制等）
-2. 每次事件需伴随一首诗，诗作需严格符合格律
-3. 诗作质量需符合主角当前的文采值（文采低时，诗风简单；文采高时，诗风成熟）
-4. 避免现代词汇，使用唐代用语（如：长安、曲江、终南山、大明宫、翰林院等）
-5. 事件描述需50-100字，包含时间、地点、人物、活动、情感`;
+1. 事件必须符合唐代长安背景
+2. 诗词灵感事件需伴随一首诗，诗作需符合格律
+3. 偶遇文人事件需指定一位已认识的文人
+4. 避免现代词汇，使用唐代用语
+5. 事件描述需50-100字`;
+
+const sceneSystemPrompt = monthlyEventSystemPrompt;
 
 function generateMonthlyScenePrompt() {
     const { world, protagonist, characters } = gameData;
@@ -184,6 +232,7 @@ function generateMonthlyScenePrompt() {
     const month = world.month;
     const location = world.currentLocation || '长安城';
     const literaryTalent = protagonist.stats.literaryTalent || 30;
+    const reputation = protagonist.stats.reputation || 0;
     const poetName = protagonist.name || '游子';
     
     const seasonThemes = {
@@ -193,46 +242,65 @@ function generateMonthlyScenePrompt() {
         '冬': ['雪中探梅', '围炉夜话', '冬至祭祖', '冰嬉']
     };
     
+    const historicalEvents = [
+        '边关急报：突厥来犯',
+        '朝堂风云：宰相更替',
+        '天灾预警：久旱求雨',
+        '盛世庆典：万国来朝',
+        '文坛盛事：翰林院征诗'
+    ];
+    
     const possibleThemes = seasonThemes[season] || [];
     const theme = possibleThemes[Math.floor(Math.random() * possibleThemes.length)];
+    const historicalEvent = historicalEvents[Math.floor(Math.random() * historicalEvents.length)];
     
-    return `请为《大唐古诗穿越记》生成本月的诗兴事件。
+    const knownPoets = characters.filter(c => c.isPoet).slice(0, 3);
+    const poetsInfo = knownPoets.map(p => `${p.name}（${p.identity}）`).join('、') || '暂无';
+    
+    return `请为《大唐古诗穿越记》生成本月的事件。
 
 【主角信息】
 - 姓名：${poetName}
 - 当前位置：${location}
-- 文采值：${literaryTalent}/100（文采低=诗句简单，文采高=诗句成熟）
-- 社交圈子：${characters.length} 位文人朋友
+- 文采值：${literaryTalent}/100
+- 声望值：${reputation}
+- 已结识文人：${poetsInfo}
 
 【当前环境】
 - 时间：${world.yearTitle}${world.year}年${month}月
 - 季节：${season}
 - 天气：${weather}
-- 推荐主题：${theme}
+- 季节活动推荐：${theme}
+- 近期历史事件：${historicalEvent}
 
 【生成任务】
-请生成 1-2 件本月的诗兴事件，返回 JSON 对象：
+请生成 1-3 件本月事件，返回 JSON 对象：
 {
     "events": [
         {
-            "title": "事件标题（10字以内，如：曲江踏青、终南山游历、曲江夜宴等）",
-            "description": "事件描述（50-100字，包含时间、地点、人物、活动、情感。需符合唐代长安背景，如：${season}月${weather}，前往${location}，与友人${theme}，诗兴大发）",
-            "poemType": "诗体（五言绝句/七言绝句/五言律诗/七言律诗）",
-            "poemTitle": "诗题（2-4字）",
-            "poemContent": "诗句（需严格符合格律。五言绝句20字，七言绝句28字，五言律诗40字，七言律诗56字。用空格分隔句，每句内部不用空格）",
-            "poetryCommentary": "诗意解读（30-50字，解释诗句意境和典故）",
-            "literaryTalentChange": 文采值变化（+1到+5的整数，基于诗作质量）,
-            "reputationChange": 声望值变化（0到+10的整数，如果诗作被传颂）
+            "eventType": "事件类型（诗词灵感/季节活动/历史事件/偶遇文人/名士来访）",
+            "title": "事件标题（10字以内）",
+            "description": "事件描述（50-100字）",
+            "involvedPoetId": "涉及的文人ID（仅偶遇文人/名士来访时填写，从已结识文人中选择，否则为null）",
+            "involvedPoetName": "涉及的文人姓名（仅偶遇文人/名士来访时填写）",
+            "openingLine": "文人开场白（仅偶遇文人/名士来访时填写，30-50字，符合该文人性格和诗风）",
+            "poemType": "诗体（仅诗词灵感事件需要）",
+            "poemTitle": "诗题（仅诗词灵感事件需要）",
+            "poemContent": "诗句（仅诗词灵感事件需要，用空格分隔句）",
+            "poetryCommentary": "诗意解读（仅诗词灵感事件需要）",
+            "literaryTalentChange": 文采值变化（0到+5的整数）,
+            "reputationChange": 声望值变化（-5到+10的整数）,
+            "charmChange": 魅力值变化（0到+3的整数）
         }
     ]
 }
 
 【生成要求】
-1. 生成 1-2 个事件（不是更多，也不是更少）
-2. 诗作必须严格符合格律（偶数句押韵，律诗中间两联对仗）
-3. 诗作质量需与主角文采值匹配（文采${literaryTalent}：${literaryTalent < 40 ? '用词简单，意境清新' : literaryTalent < 70 ? '格律工整，意境深远' : '用典自然，意境浑然'}）
-4. 事件描述需使用唐代用语（如：长安、曲江、终南山、大明宫、翰林院、东市、西市等）
-5. 避免现代词汇（如：公园、商场、酒店等）
+1. 生成 1-3 个不同类型的事件
+2. 至少包含 1 个诗词灵感或季节活动事件
+3. 有 30% 概率包含偶遇文人事件（从已结识文人中选择）
+4. 诗作需符合格律，质量匹配文采值
+5. 偶遇文人事件的开场白需符合该文人的性格和诗风
 6. 只返回 JSON 对象，不要任何其他文字说明`;
 }
 
@@ -281,9 +349,7 @@ ${participants.map((p, i) => `${i+1}. ${p.name} - ${p.identity} - 诗风:${p.poe
 
 {"partyTitle":"诗会名称","partyDescription":"诗会描述","champion":"魁首姓名","championReason":"魁首理由","participants":[{"name":"诗人姓名","poemType":"五言绝句","poemTitle":"诗题","poemContent":"诗句","poetryCommentary":"诗意解读","ranking":1,"reputationChange":10}]}
 
-重要：所有参与者必须包含在 participants 数组中。`;
-    ]
-}
+    重要：所有参与者必须包含在 participants 数组中。
 
 【生成要求】
 1. 所有参与者必须创作一首诗
@@ -411,6 +477,88 @@ ${literaryTalent}/100
 3. 只返回 JSON 对象，不要任何其他文字说明`;
 }
 
+/**
+ * Prompt 6：文人对话系统
+ */
+const dialogueSystemPrompt = `你是唐代长安城的一位文人，正在与主角进行对话。
+
+【核心任务】
+根据文人的身份、性格、诗风，生成符合人物特点的对话回复。
+
+【对话原则】
+1. 回复必须符合文人的身份和性格（如：隐士淡泊，名门矜持，歌姬婉转）
+2. 语言风格需古雅，符合唐代文人用语
+3. 可适当引用诗句或即兴作诗
+4. 对话需有情感起伏，影响好感度
+5. 回复长度30-100字`;
+
+function generateDialoguePrompt(poet, playerMessage, dialogueContext = []) {
+    const { protagonist } = gameData;
+    const relation = protagonist.relations[poet.id] || { intimacy: 0, mood: '平静' };
+    
+    const recentDialogue = dialogueContext.slice(-6).map(d => 
+        `${d.role === 'player' ? protagonist.name : poet.name}：${d.content}`
+    ).join('\n');
+    
+    return `你现在扮演唐代文人「${poet.name}」，正在与「${protagonist.name}」对话。
+
+【文人信息】
+- 姓名：${poet.name}（${poet.courtesyName || '无表字'}）
+- 身份：${poet.identity}
+- 性格诗风：${poet.poetryStyle}
+- 代表作：《${poet.signatureWorkTitle}》
+- 人物介绍：${poet.intro || poet.introduction}
+
+【当前关系】
+- 亲密度：${relation.intimacy}（-100到100，负数为敌对，正数为友好）
+- 当前情绪：${relation.mood || '平静'}
+
+【对话历史】
+${recentDialogue || '（首次对话）'}
+
+【玩家说】
+${playerMessage}
+
+【生成任务】
+请返回 JSON 对象：
+{
+    "reply": "文人的回复（30-100字，符合人物性格，语言古雅）",
+    "mood": "回复后的情绪（欣喜/平静/忧愁/愤怒/感伤/豪迈）",
+    "intimacyChange": 亲密度变化（-10到+10的整数，基于对话内容）,
+    "poetryGift": "赠诗（可选，当对话氛围很好时，文人可能赠送一首诗，格式：诗题|诗句，用空格分隔句。若无则为null）",
+    "actionHint": "动作提示（可选，描述文人的动作或表情，如：轻抚胡须、掩面而笑、眉头微蹙。若无则为null）"
+}
+
+【生成要求】
+1. 回复必须符合「${poet.name}」的性格（${poet.poetryStyle}）
+2. 语言需古雅，避免现代用语
+3. 亲密度变化需合理（好话+分，冒犯-分）
+4. 赠诗需符合格律（可选，仅在特殊时刻）
+5. 只返回 JSON 对象，不要任何其他文字说明`;
+}
+
+function generateDialogueOpeningPrompt(poet, context = '') {
+    return `你现在扮演唐代文人「${poet.name}」，正在向「${gameData.protagonist.name}」打招呼。
+
+【文人信息】
+- 姓名：${poet.name}
+- 身份：${poet.identity}
+- 性格诗风：${poet.poetryStyle}
+
+【场景】
+${context || '在长安城街头偶遇'}
+
+【生成任务】
+请返回 JSON 对象：
+{
+    "greeting": "开场白（30-50字，符合人物性格，语言古雅）",
+    "mood": "当前情绪（欣喜/平静/忧愁/感伤/豪迈）",
+    "actionHint": "动作提示（如：拱手作揖、微微点头）"
+}
+
+只返回 JSON 对象，不要任何其他文字说明`;
+}
+
 // ==================== 工具函数 ====================
 
 /**
@@ -492,6 +640,63 @@ async function callAI(prompt, systemPrompt = '', retryCount = 0, options = {}) {
     }
 }
 
+function normalizeJsonText(text) {
+    let cleaned = text
+        .replace(/\uFEFF/g, '')
+        .replace(/[“”]/g, '"')
+        .replace(/[‘’]/g, "'")
+        .replace(/：/g, ':')
+        .replace(/，/g, ',')
+        .replace(/\r\n/g, '\n')
+        .replace(/\u2028/g, '\n')
+        .replace(/\u2029/g, '\n');
+
+    return escapeJsonLineBreaks(cleaned);
+}
+
+function escapeJsonLineBreaks(text) {
+    let out = '';
+    let inString = false;
+    let escapeNext = false;
+
+    for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+
+        if (escapeNext) {
+            out += char;
+            escapeNext = false;
+            continue;
+        }
+
+        if (char === '\\') {
+            out += char;
+            escapeNext = true;
+            continue;
+        }
+
+        if (char === '"') {
+            inString = !inString;
+            out += char;
+            continue;
+        }
+
+        if (inString) {
+            if (char === '\n' || char === '\r') {
+                out += '\\n';
+                continue;
+            }
+            if (char === '\t') {
+                out += '\\t';
+                continue;
+            }
+        }
+
+        out += char;
+    }
+
+    return out;
+}
+
 /**
  * 提取 JSON（复用《桃源记》逻辑，支持智能修复）
  */
@@ -507,20 +712,30 @@ function extractJSON(text) {
         .replace(/^```\s*/i, '')
         .replace(/\s*```$/i, '');
     
+    cleaned = normalizeJsonText(cleaned);
+
     const arrayMatch = cleaned.match(/\[[\s\S]*\]/);
     const objectMatch = cleaned.match(/\{[\s\S]*\}/);
     
     let jsonMatch = arrayMatch || objectMatch;
+
+    if (!jsonMatch) {
+        const firstIndex = cleaned.search(/[\[{]/);
+        const lastIndex = Math.max(cleaned.lastIndexOf(']'), cleaned.lastIndexOf('}'));
+        if (firstIndex !== -1 && lastIndex !== -1 && lastIndex > firstIndex) {
+            jsonMatch = [cleaned.slice(firstIndex, lastIndex + 1)];
+        }
+    }
     
     if (jsonMatch) {
         let fixed = jsonMatch[0]
             .replace(/,\s*}/g, '}')
             .replace(/,\s*]/g, ']')
             .replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":')
-            .replace(/:\s*'([^']*)'/g, ': "$1"')
-            .replace(/：/g, ':')
-            .replace(/，/g, ',');
+            .replace(/:\s*'([^']*)'/g, ': "$1"');
         
+        fixed = normalizeJsonText(fixed);
+
         const smartFixed = smartTruncateJSON(fixed);
         if (smartFixed) {
             return smartFixed;
@@ -586,26 +801,36 @@ function smartTruncateJSON(jsonStr) {
     }
 }
 
+function getPersistableGameData(data) {
+    const cloned = JSON.parse(JSON.stringify(data));
+    if (cloned.settings) {
+        cloned.settings.apiKey = '';
+    }
+    return cloned;
+}
+
 /**
  * 保存游戏数据到 localStorage
  */
 function saveGameData() {
     try {
-        const dataStr = JSON.stringify(gameData);
+        const dataStr = JSON.stringify(getPersistableGameData(gameData));
         const dataSize = new Blob([dataStr]).size;
         
         if (dataSize > STORAGE_CONFIG.CRITICAL_THRESHOLD) {
             cleanupOldData();
         }
         
-        localStorage.setItem('tangPoetryGame', dataStr);
+        const finalDataStr = JSON.stringify(getPersistableGameData(gameData));
+        localStorage.setItem('tangPoetryGame', finalDataStr);
         return true;
     } catch (error) {
         console.error('保存游戏数据失败:', error);
         if (error.name === 'QuotaExceededError') {
             cleanupOldData();
             try {
-                localStorage.setItem('tangPoetryGame', JSON.stringify(gameData));
+                const finalDataStr = JSON.stringify(getPersistableGameData(gameData));
+                localStorage.setItem('tangPoetryGame', finalDataStr);
                 return true;
             } catch (e) {
                 console.error('清理后仍无法保存:', e);
@@ -623,6 +848,9 @@ function loadGameData() {
         const savedData = localStorage.getItem('tangPoetryGame');
         if (savedData) {
             const parsed = JSON.parse(savedData);
+            if (parsed.settings) {
+                parsed.settings.apiKey = '';
+            }
             gameData = { ...createDefaultGameData(), ...parsed };
             return true;
         }
@@ -655,13 +883,20 @@ function cleanupOldData() {
  * 初始化游戏（生成主角和初始文人）
  */
 async function startNewGame(playerName, gender = '女') {
+    const savedSettings = gameData.settings;
+    
     gameData = createDefaultGameData();
+    gameData.settings = savedSettings;
     gameData.protagonist.name = playerName;
     gameData.protagonist.gender = gender;
     gameData.gameStarted = true;
     
-    // 生成初始文人
-    await generatePoets(6);
+    try {
+        await generatePoets(6);
+    } catch (error) {
+        console.error('生成诗人失败:', error);
+        gameData.characters = [];
+    }
     
     saveGameData();
     return gameData;
@@ -679,24 +914,29 @@ async function generatePoets(count = 6) {
         const poets = JSON.parse(result);
         
         poets.forEach(poet => {
+            const existingPoet = gameData.characters.find(c => c.name === poet.name);
+            if (existingPoet) return;
+            
             gameData.characters.push({
                 id: 'poet_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
                 name: poet.name,
                 courtesyName: poet.courtesyName,
-                gender: poet.gender,
-                age: poet.age,
+                nickname: poet.nickname || '',
+                gender: poet.gender || '男',
+                birthYear: poet.birthYear,
+                deathYear: poet.deathYear,
+                era: poet.era,
                 identity: poet.identity,
-                socialClass: poet.socialClass,
+                birthplace: poet.birthplace,
                 poetryStyle: poet.poetryStyle,
                 specialty: poet.specialty,
                 signatureWork: poet.signatureWork,
                 signatureWorkTitle: poet.signatureWorkTitle,
-                reputation: poet.reputation,
-                charm: poet.charm,
-                literaryTalent: poet.literaryTalent,
-                socialInfluence: poet.socialInfluence,
+                reputation: poet.reputation || 80,
+                literaryTalent: poet.literaryTalent || 85,
                 intro: poet.introduction,
-                relations: {},
+                famousQuotes: poet.famousQuotes || [],
+                isHistorical: true,
                 isPoet: true
             });
         });
@@ -730,65 +970,95 @@ async function generatePoets(count = 6) {
 async function processMonthlySceneEvent() {
     if (!gameData.settings.apiKey || !gameData.settings.apiBaseUrl) {
         console.log('无API配置，跳过月度场景事件处理');
-        return;
+        return { events: [] };
     }
     
     const userPrompt = generateMonthlyScenePrompt();
     
     try {
-        const response = await callAI(userPrompt, sceneSystemPrompt);
+        const response = await callAI(userPrompt, monthlyEventSystemPrompt);
         const result = extractJSON(response);
         const data = JSON.parse(result);
         
-        if (result.events && Array.isArray(result.events)) {
-            for (const event of result.events) {
-                // 应用属性变化
-                if (event.literaryTalentChange) {
-                    gameData.protagonist.stats.literaryTalent = Math.max(0, Math.min(100, 
-                        (gameData.protagonist.stats.literaryTalent || 0) + event.literaryTalentChange));
-                }
-                if (event.reputationChange) {
-                    gameData.protagonist.stats.reputation = Math.max(-100, Math.min(100, 
-                        (gameData.protagonist.stats.reputation || 0) + event.reputationChange));
-                }
-                
-                // 收集诗稿
-                gameData.poetryCollection.push({
-                    id: 'poem_' + Date.now(),
-                    title: event.poemTitle,
-                    content: event.poemContent,
-                    type: event.poemType,
-                    commentary: event.poetryCommentary,
+        const processedEvents = [];
+        
+        if (data.events && Array.isArray(data.events)) {
+            for (const event of data.events) {
+                const processedEvent = {
+                    id: 'event_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                    eventType: event.eventType || '诗词灵感',
+                    title: event.title,
+                    description: event.description,
+                    involvedPoetId: event.involvedPoetId || null,
+                    involvedPoetName: event.involvedPoetName || null,
+                    openingLine: event.openingLine || null,
                     date: {
                         year: gameData.world.year,
                         month: gameData.world.month,
                         yearTitle: gameData.world.yearTitle
                     }
-                });
+                };
                 
-                gameData.protagonist.poetryCount++;
+                if (event.literaryTalentChange) {
+                    gameData.protagonist.stats.literaryTalent = Math.max(0, Math.min(100, 
+                        (gameData.protagonist.stats.literaryTalent || 0) + event.literaryTalentChange));
+                    processedEvent.literaryTalentChange = event.literaryTalentChange;
+                }
+                if (event.reputationChange) {
+                    gameData.protagonist.stats.reputation = Math.max(-100, Math.min(100, 
+                        (gameData.protagonist.stats.reputation || 0) + event.reputationChange));
+                    processedEvent.reputationChange = event.reputationChange;
+                }
+                if (event.charmChange) {
+                    gameData.protagonist.stats.charm = Math.max(0, Math.min(100, 
+                        (gameData.protagonist.stats.charm || 0) + event.charmChange));
+                    processedEvent.charmChange = event.charmChange;
+                }
                 
-                // 记录到记事
+                if (event.eventType === '诗词灵感' && event.poemContent) {
+                    gameData.poetryCollection.push({
+                        id: 'poem_' + Date.now(),
+                        title: event.poemTitle,
+                        content: event.poemContent,
+                        type: event.poemType,
+                        commentary: event.poetryCommentary,
+                        date: processedEvent.date
+                    });
+                    gameData.protagonist.poetryCount++;
+                    
+                    processedEvent.poemTitle = event.poemTitle;
+                    processedEvent.poemContent = event.poemContent;
+                    processedEvent.poemType = event.poemType;
+                    processedEvent.poetryCommentary = event.poetryCommentary;
+                }
+                
+                let chronicleContent = event.description;
+                if (event.poemContent) {
+                    chronicleContent += `\n\n诗题：《${event.poemTitle}》\n${event.poemContent}`;
+                    if (event.poetryCommentary) {
+                        chronicleContent += `\n\n${event.poetryCommentary}`;
+                    }
+                }
+                
                 gameData.chronicles.push({
-                    id: 'chr_scene_' + Date.now(),
-                    date: {
-                        year: gameData.world.year,
-                        month: gameData.world.month,
-                        yearTitle: gameData.world.yearTitle
-                    },
-                    content: `${event.description}\n\n诗题：《${event.poemTitle}》\n${event.poemContent}\n\n${event.poetryCommentary}`,
-                    characters: [gameData.protagonist.name],
-                    type: '诗兴'
+                    id: 'chr_event_' + Date.now(),
+                    date: processedEvent.date,
+                    content: chronicleContent,
+                    characters: event.involvedPoetName ? [gameData.protagonist.name, event.involvedPoetName] : [gameData.protagonist.name],
+                    type: event.eventType
                 });
+                
+                processedEvents.push(processedEvent);
             }
             
+            gameData.currentMonthEvents = processedEvents;
             saveGameData();
         }
         
-        return data;
+        return { events: processedEvents };
         
     } catch (error) {
-        console.error('生成月度场景事件失败:', error);
+        console.error('生成月度事件失败:', error);
         throw error;
     }
 }
@@ -819,20 +1089,30 @@ async function organizePoetryParty() {
         const result = extractJSON(response);
 
         // 调试：打印 AI 返回的原始数据
-        console.log('AI 返回的原始数据：', result);
 
-        const data = JSON.parse(result);
+        let data = JSON.parse(result);
+
+        // 如果 AI 返回的是数组（而不是对象），尝试转换为对象格式
+        if (Array.isArray(data)) {
+            const participantsList = data;
+            // 从 ranking 找出魁首
+            const championEntry = participantsList.find(p => p.ranking === 1) || participantsList[0];
+            data = {
+                partyTitle: gameData.world.season + '日诗会',
+                partyDescription: '文人雅士齐聚一堂，吟诗作赋，共赏' + gameData.world.season + '光。',
+                champion: championEntry ? championEntry.name : '',
+                championReason: championEntry ? '诗作格律工整，意境深远，当为魁首。' : '',
+                participants: participantsList
+            };
+        }
 
         // 验证数据格式
-        console.log('==== 开始验证数据结构 ===');
-        console.log('data 对象的键：', Object.keys(data));
         
         // 尝试查找 participants 字段（无论它在哪里）
         let participantsData = data.participants;
         let participantsSource = 'participants';
         
         if (!participantsData || !Array.isArray(participantsData)) {
-            console.log('participants 字段不存在或不是数组，查找其他可能...');
             
             // 尝试查找常见的变体
             const possibleKeys = ['participant', 'Participant', 'partipant', 'Poets', 'poets', 'PoetList', 'poetList'];
@@ -847,22 +1127,12 @@ async function organizePoetryParty() {
         }
         
         console.log('participantsSource：', participantsSource);
-        console.log('participants 类型：', typeof participantsData);
-        console.log('participants 是否为数组：', Array.isArray(participantsData));
-        console.log('participants 值：', participantsData);
-        console.log('participants 长度：', participantsData ? participantsData.length : 'undefined');
         
         if (!participantsData || !Array.isArray(participantsData) || participantsData.length === 0) {
             console.error('完整数据：', data);
             throw new Error(`AI 返回的数据中找不到有效的 participants 数组。字段包括：${Object.keys(data).join(', ')}。`);
         }
         
-        if (!Array.isArray(data.participants)) {
-            console.error('participants 不是数组，实际类型：', typeof data.participants);
-            console.error('participants 实际值：', data.participants);
-            throw new Error(`AI 返回的 participants 字段不是数组，实际类型：${typeof data.participants}。请重试。`);
-        }
-
         if (!data.partyDescription) {
             throw new Error('AI 返回的数据缺少 partyDescription 字段');
         }
@@ -871,20 +1141,6 @@ async function organizePoetryParty() {
             throw new Error('AI 返回的数据缺少 champion 字段');
         }
         
-        console.log('==== 数据验证通过 ====');
-
-        if (!data.participants || !Array.isArray(data.participants)) {
-            console.error('数据格式错误：', data);
-            throw new Error('AI 返回的数据格式不正确（缺少 participants 数组）。请重试。');
-        }
-
-        if (!data.partyDescription) {
-            throw new Error('AI 返回的数据缺少 partyDescription 字段');
-        }
-
-        if (!data.champion) {
-            throw new Error('AI 返回的数据缺少 champion 字段');
-        }
         
         // 处理诗会结果
         const partyRecord = {
@@ -901,7 +1157,7 @@ async function organizePoetryParty() {
             participants: []
         };
         
-        data.participants.forEach(p => {
+        participantsData.forEach(p => {
             const character = participants.find(c => c.name === p.name);
             if (character) {
                 // 应用声望变化
@@ -1172,7 +1428,7 @@ async function nextMonth() {
  * 导出游戏数据
  */
 function exportGameData() {
-    const dataStr = JSON.stringify(gameData, null, 2);
+    const dataStr = JSON.stringify(getPersistableGameData(gameData), null, 2);
     const blob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -1191,6 +1447,9 @@ function importGameData(file) {
         reader.onload = (e) => {
             try {
                 const data = JSON.parse(e.target.result);
+                if (data.settings) {
+                    data.settings.apiKey = '';
+                }
                 gameData = { ...createDefaultGameData(), ...data };
                 saveGameData();
                 resolve(gameData);
@@ -1201,6 +1460,253 @@ function importGameData(file) {
         reader.onerror = reject;
         reader.readAsText(file);
     });
+}
+
+// ==================== 对话系统函数 ====================
+
+/**
+ * 开始与文人对话
+ */
+async function startDialogue(poetId, context = '') {
+    const poet = gameData.characters.find(c => c.id === poetId);
+    if (!poet) {
+        throw new Error('找不到该文人');
+    }
+    
+    if (!gameData.dialogueHistory[poetId]) {
+        gameData.dialogueHistory[poetId] = [];
+    }
+    
+    if (!gameData.protagonist.relations[poetId]) {
+        gameData.protagonist.relations[poetId] = {
+            intimacy: 0,
+            mood: '平静',
+            lastChat: null
+        };
+    }
+    
+    try {
+        const prompt = generateDialogueOpeningPrompt(poet, context);
+        const response = await callAI(prompt, dialogueSystemPrompt);
+        const result = extractJSON(response);
+        const data = JSON.parse(result);
+        
+        const dialogueEntry = {
+            role: 'poet',
+            content: data.greeting,
+            timestamp: Date.now(),
+            mood: data.mood,
+            actionHint: data.actionHint
+        };
+        
+        gameData.dialogueHistory[poetId].push(dialogueEntry);
+        gameData.protagonist.relations[poetId].mood = data.mood;
+        gameData.protagonist.relations[poetId].lastChat = Date.now();
+        
+        if (gameData.dialogueHistory[poetId].length > 20) {
+            gameData.dialogueHistory[poetId] = gameData.dialogueHistory[poetId].slice(-20);
+        }
+        
+        saveGameData();
+        
+        return {
+            poet: poet,
+            greeting: data.greeting,
+            mood: data.mood,
+            actionHint: data.actionHint,
+            relation: gameData.protagonist.relations[poetId]
+        };
+        
+    } catch (error) {
+        console.error('开始对话失败:', error);
+        throw error;
+    }
+}
+
+/**
+ * 发送对话消息
+ */
+async function sendMessage(poetId, message) {
+    const poet = gameData.characters.find(c => c.id === poetId);
+    if (!poet) {
+        throw new Error('找不到该文人');
+    }
+    
+    if (!gameData.dialogueHistory[poetId]) {
+        gameData.dialogueHistory[poetId] = [];
+    }
+    
+    gameData.dialogueHistory[poetId].push({
+        role: 'player',
+        content: message,
+        timestamp: Date.now()
+    });
+    
+    try {
+        const dialogueContext = gameData.dialogueHistory[poetId];
+        const prompt = generateDialoguePrompt(poet, message, dialogueContext);
+        const response = await callAI(prompt, dialogueSystemPrompt);
+        const result = extractJSON(response);
+        const data = JSON.parse(result);
+        
+        const dialogueEntry = {
+            role: 'poet',
+            content: data.reply,
+            timestamp: Date.now(),
+            mood: data.mood,
+            actionHint: data.actionHint,
+            poetryGift: data.poetryGift
+        };
+        
+        gameData.dialogueHistory[poetId].push(dialogueEntry);
+        
+        if (!gameData.protagonist.relations[poetId]) {
+            gameData.protagonist.relations[poetId] = { intimacy: 0, mood: '平静' };
+        }
+        
+        const relation = gameData.protagonist.relations[poetId];
+        relation.mood = data.mood;
+        relation.intimacy = Math.max(-100, Math.min(100, 
+            (relation.intimacy || 0) + (data.intimacyChange || 0)));
+        relation.lastChat = Date.now();
+        
+        if (data.poetryGift) {
+            const [poemTitle, poemContent] = data.poetryGift.split('|');
+            if (poemTitle && poemContent) {
+                gameData.poetryCollection.push({
+                    id: 'gift_poem_' + Date.now(),
+                    title: poemTitle.trim(),
+                    content: poemContent.trim(),
+                    type: '赠诗',
+                    author: poet.name,
+                    date: {
+                        year: gameData.world.year,
+                        month: gameData.world.month,
+                        yearTitle: gameData.world.yearTitle
+                    }
+                });
+            }
+        }
+        
+        if (gameData.dialogueHistory[poetId].length > 20) {
+            gameData.dialogueHistory[poetId] = gameData.dialogueHistory[poetId].slice(-20);
+        }
+        
+        saveGameData();
+        
+        return {
+            reply: data.reply,
+            mood: data.mood,
+            intimacyChange: data.intimacyChange || 0,
+            currentIntimacy: relation.intimacy,
+            poetryGift: data.poetryGift,
+            actionHint: data.actionHint
+        };
+        
+    } catch (error) {
+        console.error('发送消息失败:', error);
+        throw error;
+    }
+}
+
+/**
+ * 结束对话
+ */
+function endDialogue(poetId) {
+    const relation = gameData.protagonist.relations[poetId];
+    if (relation) {
+        relation.lastChat = Date.now();
+        
+        gameData.chronicles.push({
+            id: 'chr_dialogue_' + Date.now(),
+            date: {
+                year: gameData.world.year,
+                month: gameData.world.month,
+                yearTitle: gameData.world.yearTitle
+            },
+            content: `与${gameData.characters.find(c => c.id === poetId)?.name || '文人'}进行了一番交谈。当前亲密度：${relation.intimacy}`,
+            characters: [gameData.protagonist.name, gameData.characters.find(c => c.id === poetId)?.name].filter(Boolean),
+            type: '交谈'
+        });
+        
+        saveGameData();
+    }
+    
+    return relation;
+}
+
+/**
+ * 获取与文人的对话历史
+ */
+function getDialogueHistory(poetId) {
+    return gameData.dialogueHistory[poetId] || [];
+}
+
+/**
+ * 获取与文人的关系状态
+ */
+function getRelation(poetId) {
+    return gameData.protagonist.relations[poetId] || { intimacy: 0, mood: '平静', lastChat: null };
+}
+
+/**
+ * 赠送礼物给诗人
+ */
+function giveGift(poetId, giftId) {
+    const poet = gameData.characters.find(c => c.id === poetId);
+    if (!poet) {
+        throw new Error('找不到该诗人');
+    }
+    
+    const gift = GIFT_ITEMS.find(g => g.id === giftId);
+    if (!gift) {
+        throw new Error('找不到该礼物');
+    }
+    
+    if (gameData.protagonist.money < gift.price) {
+        throw new Error(`铜钱不足，需要 ${gift.price} 文`);
+    }
+    
+    gameData.protagonist.money -= gift.price;
+    
+    if (!gameData.protagonist.relations[poetId]) {
+        gameData.protagonist.relations[poetId] = { intimacy: 0, mood: '平静', lastChat: null };
+    }
+    
+    const relation = gameData.protagonist.relations[poetId];
+    relation.intimacy = Math.min(100, (relation.intimacy || 0) + gift.intimacyBonus);
+    
+    gameData.chronicles.push({
+        id: 'chr_gift_' + Date.now(),
+        date: {
+            year: gameData.world.year,
+            month: gameData.world.month,
+            yearTitle: gameData.world.yearTitle
+        },
+        content: `向${poet.name}赠送了${gift.name}。"${gift.description}"`,
+        characters: [gameData.protagonist.name, poet.name],
+        type: '赠礼'
+    });
+    
+    saveGameData();
+    
+    return {
+        poet: poet.name,
+        gift: gift.name,
+        intimacyChange: gift.intimacyBonus,
+        currentIntimacy: relation.intimacy,
+        remainingMoney: gameData.protagonist.money
+    };
+}
+
+/**
+ * 获取礼物列表
+ */
+function getGiftList() {
+    return GIFT_ITEMS.map(gift => ({
+        ...gift,
+        canAfford: gameData.protagonist.money >= gift.price
+    }));
 }
 
 // ==================== 对外暴露的 API ====================
@@ -1226,18 +1732,6 @@ async function testAPIConnection() {
                 'Content-Type': 'application/json'
             }
         });
-        
-        // 如果直接连接失败，尝试使用 CORS 代理
-        if (!response.ok && response.status === 0) {
-            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(`${apiBaseUrl}/models`)}`;
-            response = await fetch(proxyUrl, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${apiKey}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-        }
         
         if (response.ok) {
             gameData.settings.connectionStatus = 'success';
@@ -1283,18 +1777,6 @@ async function fetchAvailableModels() {
                 'Content-Type': 'application/json'
             }
         });
-        
-        // 如果直接获取失败，尝试使用 CORS 代理
-        if (!response.ok) {
-            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(`${apiBaseUrl}/models`)}`;
-            response = await fetch(proxyUrl, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${apiKey}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-        }
         
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -1397,7 +1879,17 @@ if (typeof window !== 'undefined') {
         getGameData: () => gameData,
         testAPIConnection,
         fetchAvailableModels,
-        updateSettings
+        updateSettings,
+        startDialogue,
+        sendMessage,
+        endDialogue,
+        getDialogueHistory,
+        getRelation,
+        giveGift,
+        getGiftList,
+        MONTHLY_EVENT_TYPES,
+        GIFT_ITEMS,
+        TANG_ERAS
     };
 }
 
@@ -1420,7 +1912,16 @@ if (typeof module !== 'undefined' && module.exports) {
         testAPIConnection,
         fetchAvailableModels,
         updateSettings,
-        // 兼容旧版HTML
-        organizePoetryParty: organizePoetryParty
+        startDialogue,
+        sendMessage,
+        endDialogue,
+        getDialogueHistory,
+        getRelation,
+        giveGift,
+        getGiftList,
+        MONTHLY_EVENT_TYPES,
+        GIFT_ITEMS,
+        TANG_ERAS
     };
 }
+

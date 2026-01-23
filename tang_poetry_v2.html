@@ -179,6 +179,10 @@
                 <button onclick="startGame()" class="btn-ancient w-full text-lg">
                     开始穿越
                 </button>
+                
+                <button onclick="showSettingsFromStart()" class="btn-ancient w-full text-sm mt-2" style="background: #666;">
+                    ⚙️ 配置 API
+                </button>
             </div>
             
             <div id="loadingMessage" class="hidden mt-4">
@@ -229,7 +233,7 @@
             <button onclick="openCreationModal()" class="btn-ancient text-sm py-2">
                 📝 创作
             </button>
-            <button onclick="organizePoetryParty()" class="btn-ancient text-sm py-2">
+            <button onclick="organizeParty()" class="btn-ancient text-sm py-2">
                 🎎 诗会
             </button>
             <button onclick="takeExamAction()" class="btn-ancient text-sm py-2">
@@ -365,7 +369,7 @@
                 </div>
             </div>
         </div>
-        <button onclick="showTab('home')" class="fixed bottom-20 right-4 btn-ancient">
+        <button onclick="backFromSettings()" class="fixed bottom-20 right-4 btn-ancient">
             返回
         </button>
     </div>
@@ -429,6 +433,100 @@
         </div>
     </div>
     
+    <!-- 赠礼模态框 -->
+    <div id="giftModal" class="modal-overlay hidden">
+        <div class="modal-content max-w-md">
+            <h2 class="title-font text-2xl mb-4" style="color: var(--primary-color);">🎁 赠送礼物</h2>
+            <p class="text-sm text-gray-600 mb-2">向 <span id="giftTargetName" class="font-bold"></span> 赠送礼物</p>
+            <p class="text-sm mb-4">当前铜钱：<span id="currentMoney" class="font-bold text-amber-700"></span> 文</p>
+            
+            <div id="giftList" class="space-y-2 max-h-60 overflow-y-auto">
+                <!-- 礼物列表将动态插入 -->
+            </div>
+            
+            <button onclick="closeModal('giftModal')" class="btn-ancient w-full mt-4" style="background: #666;">
+                取消
+            </button>
+        </div>
+    </div>
+    
+    <!-- 诗人详情模态框 -->
+    <div id="poetDetailModal" class="modal-overlay hidden">
+        <div class="modal-content max-w-lg">
+            <div class="flex items-center space-x-4 mb-4 pb-4 border-b">
+                <div id="poetDetailAvatar" class="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center text-3xl">
+                    👨
+                </div>
+                <div>
+                    <h2 id="poetDetailName" class="title-font text-2xl" style="color: var(--primary-color);"></h2>
+                    <p id="poetDetailTitle" class="text-sm text-gray-600"></p>
+                    <p id="poetDetailEra" class="text-xs px-2 py-1 rounded inline-block mt-1" style="background: var(--bg-color);"></p>
+                </div>
+            </div>
+            
+            <div class="space-y-3">
+                <div>
+                    <h4 class="font-bold text-sm" style="color: var(--secondary-color);">生平简介</h4>
+                    <p id="poetDetailIntro" class="text-sm text-gray-700 mt-1"></p>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold text-sm" style="color: var(--secondary-color);">诗风特点</h4>
+                    <p id="poetDetailStyle" class="text-sm text-gray-700 mt-1"></p>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold text-sm" style="color: var(--secondary-color);">代表作《<span id="poetDetailWorkTitle"></span>》</h4>
+                    <p id="poetDetailWork" class="text-sm text-center mt-2 p-3 rounded" style="background: var(--bg-color);"></p>
+                </div>
+                
+                <div id="poetDetailQuotes">
+                    <h4 class="font-bold text-sm" style="color: var(--secondary-color);">名句</h4>
+                    <ul id="poetDetailQuotesList" class="text-sm text-gray-700 mt-1 list-disc pl-4"></ul>
+                </div>
+            </div>
+            
+            <div class="flex space-x-2 mt-4">
+                <button onclick="openDialogueFromDetail()" class="btn-ancient flex-1">💬 交谈</button>
+                <button onclick="openGiftFromDetail()" class="btn-ancient flex-1">🎁 赠礼</button>
+                <button onclick="closeModal('poetDetailModal')" class="btn-ancient flex-1" style="background: #666;">关闭</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 对话模态框 -->
+    <div id="dialogueModal" class="modal-overlay hidden">
+        <div class="modal-content max-w-lg" style="height: 80vh; display: flex; flex-direction: column;">
+            <div class="flex items-center space-x-3 mb-4 pb-3 border-b">
+                <div id="dialoguePoetAvatar" class="w-14 h-14 rounded-full bg-amber-100 flex items-center justify-center text-2xl">
+                    👨
+                </div>
+                <div class="flex-1">
+                    <h3 id="dialoguePoetName" class="title-font text-xl" style="color: var(--primary-color);">文人</h3>
+                    <p id="dialoguePoetIdentity" class="text-sm text-gray-600">身份</p>
+                    <div class="flex items-center space-x-3 mt-1">
+                        <span id="dialoguePoetMood" class="text-xs px-2 py-1 rounded" style="background: var(--bg-color);">平静</span>
+                        <span id="dialogueIntimacy" class="text-xs text-gray-500">亲密度: 0</span>
+                    </div>
+                </div>
+                <button onclick="closeDialogue()" class="text-2xl text-gray-400 hover:text-gray-600">&times;</button>
+            </div>
+            
+            <div id="dialogueMessages" class="flex-1 overflow-y-auto space-y-3 mb-4 p-2" style="background: var(--bg-color); border-radius: 8px;">
+                <!-- 对话消息将动态插入 -->
+            </div>
+            
+            <div class="flex space-x-2">
+                <input type="text" id="dialogueInput" placeholder="输入你想说的话..." 
+                       class="flex-1 p-3 border-2 rounded-lg focus:border-amber-500 outline-none"
+                       onkeypress="if(event.key==='Enter') sendDialogueMessage()">
+                <button onclick="sendDialogueMessage()" class="btn-ancient px-6">
+                    发送
+                </button>
+            </div>
+        </div>
+    </div>
+    
     <!-- 加载遮罩 -->
     <div id="loadingOverlay" class="modal-overlay hidden">
         <div class="text-center text-white">
@@ -466,6 +564,7 @@
         
         // 等待脚本加载完成后获取函数
         let gameFunctions = null;
+        let currentGameData = null;
         
         // 初始化
         document.addEventListener('DOMContentLoaded', () => {
@@ -501,8 +600,21 @@
                 const functions = getGameFunctions();
                 if (functions.loadGameData()) {
                     currentGameData = functions.getGameData();
-                    showGameScreen();
-                    updateUI();
+                    
+                    // 加载设置到输入框
+                    if (currentGameData.settings) {
+                        document.getElementById('apiBaseUrl').value = currentGameData.settings.apiBaseUrl || '';
+                        document.getElementById('apiKey').value = currentGameData.settings.apiKey || '';
+                        if (currentGameData.settings.model) {
+                            document.getElementById('modelSelect').value = currentGameData.settings.model;
+                        }
+                    }
+                    
+                    // 只有游戏真正开始后才显示游戏界面
+                    if (currentGameData.gameStarted) {
+                        showGameScreen();
+                        updateUI();
+                    }
                 }
             } catch (error) {
                 console.error('加载存档失败:', error);
@@ -511,6 +623,15 @@
         
         // 开始新游戏
         async function startGame() {
+            const functions = getGameFunctions();
+            const settings = functions.getGameData().settings;
+            
+            if (!settings.apiBaseUrl || !settings.apiKey) {
+                alert('⚠️ 请先配置 API\n\n点击下方"设置"按钮，填写 API 地址和 Key 后再开始游戏。');
+                showSettingsFromStart();
+                return;
+            }
+            
             const playerName = document.getElementById('playerName').value.trim();
             if (!playerName) {
                 alert('请输入姓名');
@@ -523,7 +644,6 @@
             document.getElementById('loadingMessage').classList.remove('hidden');
             
             try {
-                const functions = getGameFunctions();
                 await functions.startNewGame(playerName, gender);
                 currentGameData = functions.getGameData();
                 showGameScreen();
@@ -533,6 +653,20 @@
                 alert('开始游戏失败：' + error.message);
                 document.getElementById('newGameForm').classList.remove('hidden');
                 document.getElementById('loadingMessage').classList.add('hidden');
+            }
+        }
+        
+        function showSettingsFromStart() {
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('settingsScreen').classList.remove('hidden');
+        }
+        
+        function backFromSettings() {
+            document.getElementById('settingsScreen').classList.add('hidden');
+            if (currentGameData && currentGameData.gameStarted) {
+                document.getElementById('gameScreen').classList.remove('hidden');
+            } else {
+                document.getElementById('startScreen').classList.remove('hidden');
             }
         }
         
@@ -571,6 +705,9 @@
             
             // 更新记事
             updateChronicles();
+            
+            // 更新当月事件
+            updateCurrentEvents();
         }
         
         // 更新诗稿收藏
@@ -607,24 +744,42 @@
                 return;
             }
             
-            container.innerHTML = poets.map(poet => `
-                <div class="poetry-card">
+            container.innerHTML = poets.map(poet => {
+                const relation = currentGameData.protagonist.relations[poet.id] || { intimacy: 0 };
+                const intimacyText = relation.intimacy > 50 ? '挚友' : relation.intimacy > 20 ? '友善' : relation.intimacy > 0 ? '初识' : relation.intimacy < -20 ? '敌对' : '陌生';
+                const intimacyColor = relation.intimacy > 20 ? 'text-green-600' : relation.intimacy < 0 ? 'text-red-600' : 'text-gray-600';
+                const eraColors = { '初唐': '#4B5563', '盛唐': '#DC2626', '中唐': '#2563EB', '晚唐': '#7C3AED' };
+                const eraColor = eraColors[poet.era] || '#6B7280';
+                const lifeSpan = poet.birthYear && poet.deathYear ? `${poet.birthYear}-${poet.deathYear}` : '';
+                
+                return `
+                <div class="poetry-card cursor-pointer" onclick="showPoetDetail('${poet.id}')">
                     <div class="flex items-center space-x-3">
-                        <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-xl">
+                        <div class="w-14 h-14 rounded-full bg-amber-100 flex items-center justify-center text-2xl flex-shrink-0">
                             ${poet.gender === '女' ? '👩' : '👨'}
                         </div>
-                        <div class="flex-1">
-                            <h4 class="font-bold" style="color: var(--primary-color);">${poet.name}</h4>
-                            <p class="text-sm text-gray-600">${poet.courtesyName || ''} · ${poet.identity}</p>
-                            <p class="text-xs text-gray-500">${poet.poetryStyle}</p>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center space-x-2">
+                                <h4 class="font-bold" style="color: var(--primary-color);">${poet.name}</h4>
+                                ${poet.nickname ? `<span class="text-xs text-gray-500">${poet.nickname}</span>` : ''}
+                                ${poet.era ? `<span class="text-xs px-1 rounded text-white" style="background: ${eraColor};">${poet.era}</span>` : ''}
+                            </div>
+                            <p class="text-sm text-gray-600">${poet.courtesyName ? '字' + poet.courtesyName + ' · ' : ''}${poet.identity}</p>
+                            <p class="text-xs text-gray-500 truncate">${poet.poetryStyle || ''}</p>
+                            <p class="text-xs ${intimacyColor}">关系: ${intimacyText} (${relation.intimacy}) ${lifeSpan ? '| ' + lifeSpan : ''}</p>
                         </div>
-                        <div class="text-right">
-                            <p class="text-sm text-amber-700">文采 ${poet.literaryTalent}</p>
-                            <p class="text-sm text-amber-700">声望 ${poet.reputation}</p>
+                        <div class="text-right space-y-1 flex-shrink-0">
+                            <button onclick="event.stopPropagation(); openDialogue('${poet.id}')" class="btn-ancient text-xs py-1 px-2">
+                                💬
+                            </button>
+                            <button onclick="event.stopPropagation(); openGiftModal('${poet.id}')" class="btn-ancient text-xs py-1 px-2">
+                                🎁
+                            </button>
                         </div>
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
         
         // 更新记事
@@ -646,6 +801,60 @@
                     <p class="text-sm whitespace-pre-line">${item.content}</p>
                 </div>
             `).join('');
+        }
+        
+        function updateCurrentEvents() {
+            const container = document.getElementById('currentEvents');
+            const events = currentGameData.currentMonthEvents || [];
+            
+            if (events.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center">暂无诗兴事件</p>';
+                return;
+            }
+            
+            const eventIcons = {
+                '诗词灵感': '✨',
+                '季节活动': '🌸',
+                '历史事件': '📜',
+                '偶遇文人': '👤',
+                '名士来访': '🎭'
+            };
+            
+            container.innerHTML = events.map(event => {
+                const icon = eventIcons[event.eventType] || '📌';
+                let content = `
+                    <div class="poetry-card">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-bold" style="color: var(--primary-color);">${icon} ${event.title}</span>
+                            <span class="text-xs px-2 py-1 rounded" style="background: var(--bg-color);">${event.eventType}</span>
+                        </div>
+                        <p class="text-sm text-gray-700 mb-2">${event.description}</p>
+                `;
+                
+                if (event.poemContent) {
+                    content += `
+                        <div class="mt-2 p-2 rounded" style="background: var(--bg-color);">
+                            <p class="text-sm font-bold mb-1">《${event.poemTitle}》</p>
+                            <p class="text-sm text-center">${event.poemContent}</p>
+                            ${event.poetryCommentary ? `<p class="text-xs text-gray-500 mt-1">${event.poetryCommentary}</p>` : ''}
+                        </div>
+                    `;
+                }
+                
+                if (event.involvedPoetName) {
+                    const poet = currentGameData.characters.find(c => c.name === event.involvedPoetName);
+                    if (poet) {
+                        content += `
+                            <button onclick="openDialogue('${poet.id}')" class="btn-ancient text-xs py-1 px-3 mt-2">
+                                💬 与${event.involvedPoetName}交谈
+                            </button>
+                        `;
+                    }
+                }
+                
+                content += '</div>';
+                return content;
+            }).join('');
         }
         
         // 切换标签页
@@ -674,9 +883,11 @@
                 document.getElementById('navSettings').classList.add('active');
                 
                 // 填充设置
-                document.getElementById('apiBaseUrl').value = currentGameData.settings.apiBaseUrl || '';
-                document.getElementById('apiKey').value = currentGameData.settings.apiKey || '';
-                document.getElementById('modelSelect').value = currentGameData.settings.model || 'gpt-3.5-turbo';
+                if (currentGameData && currentGameData.settings) {
+                    document.getElementById('apiBaseUrl').value = currentGameData.settings.apiBaseUrl || '';
+                    document.getElementById('apiKey').value = currentGameData.settings.apiKey || '';
+                    document.getElementById('modelSelect').value = currentGameData.settings.model || 'gpt-3.5-turbo';
+                }
             }
         }
         
@@ -833,7 +1044,15 @@
                 await functions.nextMonth();
                 currentGameData = functions.getGameData();
                 updateUI();
-                alert('✅ 时间推进成功！');
+                updateCurrentEvents();
+                
+                const events = currentGameData.currentMonthEvents || [];
+                const encounterEvent = events.find(e => e.eventType === '偶遇文人' || e.eventType === '名士来访');
+                if (encounterEvent) {
+                    triggerRandomEncounter(encounterEvent);
+                } else {
+                    alert(`✅ ${currentGameData.world.yearTitle}${currentGameData.world.year}年${currentGameData.world.month}月\n\n本月发生了 ${events.length} 件事`);
+                }
             } catch (error) {
                 console.error('推进时间失败:', error);
                 alert('❌ 推进时间失败：' + error.message);
@@ -969,6 +1188,252 @@
             if (confirm('⚠️ 确定要重新开始吗？\n\n所有进度将丢失，无法恢复。')) {
                 localStorage.removeItem('tangPoetryGame');
                 location.reload();
+            }
+        }
+        
+        // ==================== 对话系统 ====================
+        
+        let currentDialoguePoetId = null;
+        
+        async function openDialogue(poetId, context = '') {
+            if (!currentGameData.settings.apiKey || !currentGameData.settings.apiBaseUrl) {
+                alert('请先在"设置"中配置 API');
+                return;
+            }
+            
+            currentDialoguePoetId = poetId;
+            const poet = currentGameData.characters.find(c => c.id === poetId);
+            if (!poet) {
+                alert('找不到该文人');
+                return;
+            }
+            
+            document.getElementById('dialoguePoetAvatar').textContent = poet.gender === '女' ? '👩' : '👨';
+            document.getElementById('dialoguePoetName').textContent = poet.name;
+            document.getElementById('dialoguePoetIdentity').textContent = poet.identity;
+            document.getElementById('dialogueMessages').innerHTML = '<p class="text-center text-gray-400">正在打招呼...</p>';
+            document.getElementById('dialogueModal').classList.remove('hidden');
+            
+            try {
+                const functions = getGameFunctions();
+                const result = await functions.startDialogue(poetId, context);
+                currentGameData = functions.getGameData();
+                
+                updateDialogueUI(result);
+                addDialogueMessage('poet', result.greeting, result.actionHint);
+                
+            } catch (error) {
+                console.error('开始对话失败:', error);
+                addDialogueMessage('system', '（对话开始失败：' + error.message + '）');
+            }
+        }
+        
+        async function sendDialogueMessage() {
+            const input = document.getElementById('dialogueInput');
+            const message = input.value.trim();
+            if (!message || !currentDialoguePoetId) return;
+            
+            input.value = '';
+            addDialogueMessage('player', message);
+            
+            const sendBtn = document.querySelector('#dialogueModal button[onclick="sendDialogueMessage()"]');
+            sendBtn.disabled = true;
+            sendBtn.textContent = '...';
+            
+            try {
+                const functions = getGameFunctions();
+                const result = await functions.sendMessage(currentDialoguePoetId, message);
+                currentGameData = functions.getGameData();
+                
+                updateDialogueUI({
+                    mood: result.mood,
+                    relation: { intimacy: result.currentIntimacy }
+                });
+                
+                let replyContent = result.reply;
+                if (result.poetryGift) {
+                    replyContent += '\n\n（赠诗一首）\n' + result.poetryGift.replace('|', '\n');
+                }
+                addDialogueMessage('poet', replyContent, result.actionHint);
+                
+                if (result.intimacyChange !== 0) {
+                    const changeText = result.intimacyChange > 0 ? '+' + result.intimacyChange : result.intimacyChange;
+                    addDialogueMessage('system', `亲密度 ${changeText}`);
+                }
+                
+            } catch (error) {
+                console.error('发送消息失败:', error);
+                addDialogueMessage('system', '（回复失败：' + error.message + '）');
+            }
+            
+            sendBtn.disabled = false;
+            sendBtn.textContent = '发送';
+        }
+        
+        function addDialogueMessage(role, content, actionHint = null) {
+            const container = document.getElementById('dialogueMessages');
+            const poet = currentGameData.characters.find(c => c.id === currentDialoguePoetId);
+            
+            let html = '';
+            if (role === 'player') {
+                html = `
+                    <div class="flex justify-end">
+                        <div class="max-w-xs p-3 rounded-lg" style="background: var(--primary-color); color: white;">
+                            <p class="text-sm">${content}</p>
+                        </div>
+                    </div>
+                `;
+            } else if (role === 'poet') {
+                html = `
+                    <div class="flex justify-start space-x-2">
+                        <div class="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-sm flex-shrink-0">
+                            ${poet?.gender === '女' ? '👩' : '👨'}
+                        </div>
+                        <div class="max-w-xs">
+                            ${actionHint ? `<p class="text-xs text-gray-400 mb-1">（${actionHint}）</p>` : ''}
+                            <div class="p-3 rounded-lg" style="background: white; border: 1px solid #ddd;">
+                                <p class="text-sm" style="white-space: pre-wrap;">${content}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                html = `<p class="text-center text-xs text-gray-400">${content}</p>`;
+            }
+            
+            container.innerHTML += html;
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function updateDialogueUI(data) {
+            if (data.mood) {
+                document.getElementById('dialoguePoetMood').textContent = data.mood;
+            }
+            if (data.relation) {
+                document.getElementById('dialogueIntimacy').textContent = '亲密度: ' + data.relation.intimacy;
+            }
+        }
+        
+        function closeDialogue() {
+            if (currentDialoguePoetId) {
+                const functions = getGameFunctions();
+                functions.endDialogue(currentDialoguePoetId);
+                currentGameData = functions.getGameData();
+                updatePoetsList();
+            }
+            currentDialoguePoetId = null;
+            document.getElementById('dialogueModal').classList.add('hidden');
+            document.getElementById('dialogueMessages').innerHTML = '';
+        }
+        
+        async function triggerRandomEncounter(event) {
+            if (event.eventType === '偶遇文人' || event.eventType === '名士来访') {
+                const poet = currentGameData.characters.find(c => c.name === event.involvedPoetName);
+                if (poet) {
+                    setTimeout(() => {
+                        if (confirm(`${event.involvedPoetName}向你走来：\n\n"${event.openingLine}"\n\n是否与其交谈？`)) {
+                            openDialogue(poet.id, event.description);
+                        }
+                    }, 500);
+                }
+            }
+        }
+        
+        // ==================== 赠礼系统 ====================
+        
+        let currentGiftTargetId = null;
+        
+        function openGiftModal(poetId) {
+            const poet = currentGameData.characters.find(c => c.id === poetId);
+            if (!poet) return;
+            
+            currentGiftTargetId = poetId;
+            document.getElementById('giftTargetName').textContent = poet.name;
+            document.getElementById('currentMoney').textContent = currentGameData.protagonist.money;
+            
+            const functions = getGameFunctions();
+            const gifts = functions.getGiftList();
+            
+            document.getElementById('giftList').innerHTML = gifts.map(gift => `
+                <div class="flex items-center justify-between p-3 rounded ${gift.canAfford ? 'bg-amber-50 cursor-pointer hover:bg-amber-100' : 'bg-gray-100 opacity-50'}" 
+                     ${gift.canAfford ? `onclick="doGiveGift('${gift.id}')"` : ''}>
+                    <div>
+                        <p class="font-bold" style="color: var(--primary-color);">${gift.name}</p>
+                        <p class="text-xs text-gray-600">${gift.description}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm text-amber-700">${gift.price} 文</p>
+                        <p class="text-xs text-green-600">+${gift.intimacyBonus} 好感</p>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('giftModal').classList.remove('hidden');
+        }
+        
+        function doGiveGift(giftId) {
+            if (!currentGiftTargetId) return;
+            
+            try {
+                const functions = getGameFunctions();
+                const result = functions.giveGift(currentGiftTargetId, giftId);
+                currentGameData = functions.getGameData();
+                
+                alert(`✅ 赠送成功！\n\n向${result.poet}赠送了${result.gift}\n好感度 +${result.intimacyChange}\n当前好感度：${result.currentIntimacy}\n剩余铜钱：${result.remainingMoney} 文`);
+                
+                closeModal('giftModal');
+                updatePoetsList();
+                updateUI();
+            } catch (error) {
+                alert('❌ ' + error.message);
+            }
+        }
+        
+        // ==================== 诗人详情 ====================
+        
+        let currentDetailPoetId = null;
+        
+        function showPoetDetail(poetId) {
+            const poet = currentGameData.characters.find(c => c.id === poetId);
+            if (!poet) return;
+            
+            currentDetailPoetId = poetId;
+            
+            document.getElementById('poetDetailAvatar').textContent = poet.gender === '女' ? '👩' : '👨';
+            document.getElementById('poetDetailName').textContent = poet.name + (poet.nickname ? ` (${poet.nickname})` : '');
+            document.getElementById('poetDetailTitle').textContent = (poet.courtesyName ? '字' + poet.courtesyName + ' · ' : '') + (poet.identity || '');
+            
+            const lifeSpan = poet.birthYear && poet.deathYear ? `${poet.birthYear}-${poet.deathYear}年` : '';
+            document.getElementById('poetDetailEra').textContent = (poet.era || '') + (lifeSpan ? ' · ' + lifeSpan : '');
+            
+            document.getElementById('poetDetailIntro').textContent = poet.intro || poet.introduction || '暂无介绍';
+            document.getElementById('poetDetailStyle').textContent = poet.poetryStyle || '暂无描述';
+            document.getElementById('poetDetailWorkTitle').textContent = poet.signatureWorkTitle || '无题';
+            document.getElementById('poetDetailWork').textContent = poet.signatureWork || '暂无';
+            
+            const quotesContainer = document.getElementById('poetDetailQuotes');
+            const quotesList = document.getElementById('poetDetailQuotesList');
+            if (poet.famousQuotes && poet.famousQuotes.length > 0) {
+                quotesContainer.style.display = 'block';
+                quotesList.innerHTML = poet.famousQuotes.map(q => `<li class="mb-1">"${q}"</li>`).join('');
+            } else {
+                quotesContainer.style.display = 'none';
+            }
+            
+            document.getElementById('poetDetailModal').classList.remove('hidden');
+        }
+        
+        function openDialogueFromDetail() {
+            if (currentDetailPoetId) {
+                closeModal('poetDetailModal');
+                openDialogue(currentDetailPoetId);
+            }
+        }
+        
+        function openGiftFromDetail() {
+            if (currentDetailPoetId) {
+                closeModal('poetDetailModal');
+                openGiftModal(currentDetailPoetId);
             }
         }
     </script>
