@@ -277,27 +277,9 @@ ${participants.map((p, i) => `${i+1}. ${p.name} - ${p.identity} - 诗风:${p.poe
 
 ## 生成要求
 
-请返回 ONLY 一个 JSON 对象（不要包含任何其他文字、解释或标记）：
+请返回 JSON 对象（不要包含任何其他文字或标记），格式如下：
 
-\`\`\`json
-{
-    "partyTitle": "诗会名称（10字以内）",
-    "partyDescription": "诗会描述（60-100字）",
-    "champion": "魁首姓名",
-    "championReason": "魁首理由（20-40字）",
-    "participants": [
-        {
-            "name": "诗人姓名",
-            "poemType": "五言绝句",
-            "poemTitle": "诗题",
-            "poemContent": "诗句（符合格律）",
-            "poetryCommentary": "诗意解读",
-            "ranking": 1,
-            "reputationChange": 10
-        }
-    ]
-}
-\`\`\`
+{"partyTitle":"诗会名称","partyDescription":"诗会描述","champion":"魁首姓名","championReason":"魁首理由","participants":[{"name":"诗人姓名","poemType":"五言绝句","poemTitle":"诗题","poemContent":"诗句","poetryCommentary":"诗意解读","ranking":1,"reputationChange":10}]}
 
 重要：所有参与者必须包含在 participants 数组中。`;
     ]
