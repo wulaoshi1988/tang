@@ -264,33 +264,42 @@ function generatePoetryPartyPrompt(participants) {
     
     const theme = partyThemes[season] || '曲江雅集，自由创作';
     
-    return `请为《大唐古诗穿越记》组织一场诗会雅集。
+    return `你是唐代长安诗会的组织者。请严格按照以下要求生成 JSON 数据。
 
-【诗会信息】
-- 地点：${location}
-- 主题：${theme}
-- 季节：${season}
+## 诗会信息
+地点：${location}
+主题：${theme}
+季节：${season}
+参与人数：${participants.length}人
 
-【参与者信息】
-${participants.map((p, i) => `- 第${i+1}位：${p.name}（${p.identity}，诗风：${p.poetryStyle}，文采值：${p.literaryTalent || 50}）`).join('\n')}
+## 参与者
+${participants.map((p, i) => `${i+1}. ${p.name} - ${p.identity} - 诗风:${p.poetryStyle} - 文采:${p.literaryTalent || 50}`).join('\n')}
 
-【生成任务】
-请返回 JSON 对象：
+## 生成要求
+
+请返回 ONLY 一个 JSON 对象（不要包含任何其他文字、解释或标记）：
+
+\`\`\`json
 {
-    "partyTitle": "诗会名称（10字以内，如：曲江春宴、终南山秋集、大明宫应制诗会等）",
-    "partyDescription": "诗会描述（60-100字，包含时间、地点、参与人数、氛围。需符合唐代诗会背景，如：${season}时节，${participants.length}位文人在${location}雅集，${theme}，诗酒风流）",
-    "champion": "魁首姓名（即本次诗会第一名，需是参与者中文名字）",
-    "championReason": "魁首理由（20-40字，说明为何此人诗作最佳）",
+    "partyTitle": "诗会名称（10字以内）",
+    "partyDescription": "诗会描述（60-100字）",
+    "champion": "魁首姓名",
+    "championReason": "魁首理由（20-40字）",
     "participants": [
         {
-            "name": "参与者姓名",
-            "poemType": "诗体（五言绝句/七言绝句/五言律诗/七言律诗）",
-            "poemTitle": "诗题（2-4字，需符合主题）",
-            "poemContent": "诗句（需严格符合格律。五言绝句20字，七言绝句28字，五言律诗40字，七言律诗56字。用空格分隔句）",
-            "poetryCommentary": "诗意解读（30-50字）",
-            "ranking": 排名（1-${participants.length}的整数，1为魁首）,
-            "reputationChange": 声望变化（-5到+15的整数，魁首+10-15，前三+5-10，其他+0-3）
+            "name": "诗人姓名",
+            "poemType": "五言绝句",
+            "poemTitle": "诗题",
+            "poemContent": "诗句（符合格律）",
+            "poetryCommentary": "诗意解读",
+            "ranking": 1,
+            "reputationChange": 10
         }
+    ]
+}
+\`\`\`
+
+重要：所有参与者必须包含在 participants 数组中。`;
     ]
 }
 
@@ -833,9 +842,54 @@ async function organizePoetryParty() {
         const data = JSON.parse(result);
 
         // 验证数据格式
-        if (!data) {
-            throw new Error('AI 返回数据为空，请重试');
+        console.log('==== 开始验证数据结构 ===');
+        console.log('data 对象的键：', Object.keys(data));
+        
+        // 尝试查找 participants 字段（无论它在哪里）
+        let participantsData = data.participants;
+        let participantsSource = 'participants';
+        
+        if (!participantsData || !Array.isArray(participantsData)) {
+            console.log('participants 字段不存在或不是数组，查找其他可能...');
+            
+            // 尝试查找常见的变体
+            const possibleKeys = ['participant', 'Participant', 'partipant', 'Poets', 'poets', 'PoetList', 'poetList'];
+            for (const key of possibleKeys) {
+                if (data[key] && Array.isArray(data[key])) {
+                    participantsData = data[key];
+                    participantsSource = key;
+                    console.log(`找到数据在字段 "${key}"`);
+                    break;
+                }
+            }
         }
+        
+        console.log('participantsSource：', participantsSource);
+        console.log('participants 类型：', typeof participantsData);
+        console.log('participants 是否为数组：', Array.isArray(participantsData));
+        console.log('participants 值：', participantsData);
+        console.log('participants 长度：', participantsData ? participantsData.length : 'undefined');
+        
+        if (!participantsData || !Array.isArray(participantsData) || participantsData.length === 0) {
+            console.error('完整数据：', data);
+            throw new Error(`AI 返回的数据中找不到有效的 participants 数组。字段包括：${Object.keys(data).join(', ')}。`);
+        }
+        
+        if (!Array.isArray(data.participants)) {
+            console.error('participants 不是数组，实际类型：', typeof data.participants);
+            console.error('participants 实际值：', data.participants);
+            throw new Error(`AI 返回的 participants 字段不是数组，实际类型：${typeof data.participants}。请重试。`);
+        }
+
+        if (!data.partyDescription) {
+            throw new Error('AI 返回的数据缺少 partyDescription 字段');
+        }
+
+        if (!data.champion) {
+            throw new Error('AI 返回的数据缺少 champion 字段');
+        }
+        
+        console.log('==== 数据验证通过 ====');
 
         if (!data.participants || !Array.isArray(data.participants)) {
             console.error('数据格式错误：', data);
@@ -1383,6 +1437,8 @@ if (typeof module !== 'undefined' && module.exports) {
         getGameData: () => gameData,
         testAPIConnection,
         fetchAvailableModels,
-        updateSettings
+        updateSettings,
+        // 兼容旧版HTML
+        organizePoetryParty: organizePoetryParty
     };
 }
